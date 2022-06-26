@@ -104,3 +104,4 @@ cmd/geth/node/
 cmd/geth/__debug_bin
 
 **.env
+**/data
