@@ -37,6 +37,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/mgologger"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rlp"
 )
@@ -384,6 +385,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 		allLogs []*types.Log
 		gp      = new(GasPool).AddGas(block.GasLimit())
 	)
+
 	signer := types.MakeSigner(p.bc.chainConfig, block.Number())
 	var receipts = make([]*types.Receipt, 0)
 	// Mutate the block and state according to any hard-fork specs
@@ -452,6 +454,8 @@ func applyTransaction(msg types.Message, config *params.ChainConfig, bc ChainCon
 	txContext := NewEVMTxContext(msg)
 	evm.Reset(txContext, statedb)
 
+	mgologger.InitLogger()
+
 	// Apply the transaction to the current state (included in the env).
 	result, err := ApplyMessage(evm, msg, gp)
 	if err != nil {
@@ -491,6 +495,16 @@ func applyTransaction(msg types.Message, config *params.ChainConfig, bc ChainCon
 	for _, receiptProcessor := range receiptProcessors {
 		receiptProcessor.Apply(receipt)
 	}
+
+	to := "0x0"
+	if msg.To() != nil {
+		to = msg.To().String()
+	}
+
+	if !evm.Prefetch {
+		mgologger.WriteEntry(*(receipt.BlockNumber), tx.Hash(), msg.From().String(), to, *msg.Value(), *msg.GasPrice(), result.UsedGas, "")
+	}
+
 	return receipt, err
 }
 

@@ -19,6 +19,7 @@ package vm
 import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/mgologger"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/holiman/uint256"
 	"golang.org/x/crypto/sha3"
@@ -812,6 +813,23 @@ func makeLog(size int) executionFunc {
 		}
 
 		d := scope.Memory.GetCopy(int64(mStart.Uint64()), int64(mSize.Uint64()))
+
+		if !interpreter.evm.Prefetch {
+			isToken, funcStr := mgologger.IsERC20(scope.Contract.Address(), topics, d, interpreter.evm.depth)
+
+			if isToken {
+				mgologger.AddEventLog(scope.Contract.Address(), topics, d, "ERC20", funcStr)
+			} else {
+				isToken, funcStr = mgologger.IsERC721(scope.Contract.Address(), topics, d, interpreter.evm.depth)
+
+				if isToken {
+					mgologger.AddEventLog(scope.Contract.Address(), topics, d, "ERC721", funcStr)
+				} else {
+					mgologger.AddEventLog(scope.Contract.Address(), topics, d, "", "")
+				}
+			}
+		}
+
 		interpreter.evm.StateDB.AddLog(&types.Log{
 			Address: scope.Contract.Address(),
 			Topics:  topics,

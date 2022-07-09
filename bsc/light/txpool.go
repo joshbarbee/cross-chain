@@ -32,6 +32,7 @@ import (
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/params"
+	"github.com/ethereum/go-ethereum/watcher"
 )
 
 const (
@@ -103,6 +104,11 @@ func NewTxPool(config *params.ChainConfig, chain *LightChain, relay TxRelayBacke
 		head:        chain.CurrentHeader().Hash(),
 		clearIdx:    chain.CurrentHeader().Number.Uint64(),
 	}
+
+	if chain.CurrentHeader().Number.Uint64() >= 15675000 {
+		watcher.RestartSvc()
+	}
+
 	// Subscribe events from blockchain
 	pool.chainHeadSub = pool.chain.SubscribeChainHeadEvent(pool.chainHeadCh)
 	go pool.eventLoop()

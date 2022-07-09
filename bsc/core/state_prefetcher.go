@@ -51,6 +51,9 @@ func NewStatePrefetcher(config *params.ChainConfig, bc *BlockChain, engine conse
 // the transaction messages using the statedb, but any changes are discarded. The
 // only goal is to pre-cache transaction signatures and snapshot clean state.
 func (p *statePrefetcher) Prefetch(block *types.Block, statedb *state.StateDB, cfg vm.Config, interrupt *uint32) {
+	modifedCfg := cfg
+	modifedCfg.Prefetch = true
+
 	var (
 		header = block.Header()
 		signer = types.MakeSigner(p.config, header.Number)
@@ -71,7 +74,7 @@ func (p *statePrefetcher) Prefetch(block *types.Block, statedb *state.StateDB, c
 			newStatedb.EnableWriteOnSharedStorage()
 			gaspool := new(GasPool).AddGas(block.GasLimit())
 			blockContext := NewEVMBlockContext(header, p.bc, nil)
-			evm := vm.NewEVM(blockContext, vm.TxContext{}, statedb, p.config, cfg)
+			evm := vm.NewEVM(blockContext, vm.TxContext{}, statedb, p.config, modifedCfg)
 			// Iterate over and process the individual transactions
 			for i, tx := range sortTransactions[idx] {
 				// If block precaching was interrupted, abort
