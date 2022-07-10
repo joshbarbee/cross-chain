@@ -17,6 +17,7 @@
 package vm
 
 import (
+	"encoding/hex"
 	"errors"
 	"math/big"
 	"sync"
@@ -230,6 +231,11 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 		return nil, gas, ErrInsufficientBalance
 	}
 
+	gasCopy := gas
+	inputCopy := make([]byte, len(input))
+	copy(inputCopy, input)
+	valueCopy := value.String()
+
 	snapshot := evm.StateDB.Snapshot()
 	p, isPrecompile := evm.precompile(addr)
 
@@ -290,6 +296,12 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 			ret, err = run(evm, contract, input, false)
 			gas = contract.Gas
 		}
+
+		if !evm.Prefetch {
+			to := addr.String()
+			from := caller.Address().String()
+			mgologger.AddFuncLog(traceIndexCopy, "CALL", evm.depth, from, to, valueCopy, gasCopy, hex.EncodeToString(inputCopy), hex.EncodeToString(ret))
+		}
 	}
 	// When an error was returned by the EVM or when setting the creation code
 	// above we revert to the snapshot and consume any gas remaining. Additionally
@@ -329,6 +341,11 @@ func (evm *EVM) CallCode(caller ContractRef, addr common.Address, input []byte, 
 		return nil, gas, ErrInsufficientBalance
 	}
 
+	gasCopy := gas
+	inputCopy := make([]byte, len(input))
+	copy(inputCopy, input)
+	valueCopy := value.String()
+
 	var snapshot = evm.StateDB.Snapshot()
 
 	// Invoke tracer hooks that signal entering/exiting a call frame
@@ -356,6 +373,12 @@ func (evm *EVM) CallCode(caller ContractRef, addr common.Address, input []byte, 
 		contract.SetCallCode(&addrCopy, evm.StateDB.GetCodeHash(addrCopy), evm.StateDB.GetCode(addrCopy))
 		ret, err = run(evm, contract, input, false)
 		gas = contract.Gas
+
+		if !evm.Prefetch {
+			to := addr.String()
+			from := caller.Address().String()
+			mgologger.AddFuncLog(traceIndexCopy, "CALLCODE", evm.depth, from, to, valueCopy, gasCopy, hex.EncodeToString(inputCopy), hex.EncodeToString(ret))
+		}
 	}
 	if err != nil {
 		evm.StateDB.RevertToSnapshot(snapshot)
@@ -379,6 +402,10 @@ func (evm *EVM) DelegateCall(caller ContractRef, addr common.Address, input []by
 	if evm.depth > int(params.CallCreateDepth) {
 		return nil, gas, ErrDepth
 	}
+
+	gasCopy := gas
+	inputCopy := make([]byte, len(input))
+	copy(inputCopy, input)
 
 	var snapshot = evm.StateDB.Snapshot()
 
@@ -407,6 +434,12 @@ func (evm *EVM) DelegateCall(caller ContractRef, addr common.Address, input []by
 		contract.SetCallCode(&addrCopy, evm.StateDB.GetCodeHash(addrCopy), evm.StateDB.GetCode(addrCopy))
 		ret, err = run(evm, contract, input, false)
 		gas = contract.Gas
+
+		if !evm.Prefetch {
+			to := addr.String()
+			from := caller.Address().String()
+			mgologger.AddFuncLog(traceIndexCopy, "DELEGATECALL", evm.depth, from, to, "0", gasCopy, hex.EncodeToString(inputCopy), hex.EncodeToString(ret))
+		}
 	}
 
 	if err != nil {
@@ -430,6 +463,10 @@ func (evm *EVM) StaticCall(caller ContractRef, addr common.Address, input []byte
 	if evm.depth > int(params.CallCreateDepth) {
 		return nil, gas, ErrDepth
 	}
+
+	gasCopy := gas
+	inputCopy := make([]byte, len(input))
+	copy(inputCopy, input)
 
 	// We take a snapshot here. This is a bit counter-intuitive, and could probably be skipped.
 	// However, even a staticcall is considered a 'touch'. On mainnet, static calls were introduced
@@ -474,6 +511,12 @@ func (evm *EVM) StaticCall(caller ContractRef, addr common.Address, input []byte
 		// when we're in Homestead this also counts for code storage gas errors.
 		ret, err = run(evm, contract, input, true)
 		gas = contract.Gas
+
+		if !evm.Prefetch {
+			to := addr.String()
+			from := caller.Address().String()
+			mgologger.AddFuncLog(traceIndexCopy, "STATICCALL", evm.depth, from, to, "0", gasCopy, hex.EncodeToString(inputCopy), hex.EncodeToString(ret))
+		}
 	}
 
 	if err != nil {
@@ -519,6 +562,11 @@ func (evm *EVM) create(caller ContractRef, codeAndHash *codeAndHash, gas uint64,
 	if evm.StateDB.GetNonce(address) != 0 || (contractHash != (common.Hash{}) && contractHash != emptyCodeHash) {
 		return nil, common.Address{}, 0, ErrContractAddressCollision
 	}
+
+	gasCopy := gas
+	codeCopy := make([]byte, len(codeAndHash.code))
+	copy(codeCopy, codeAndHash.code)
+	valueCopy := value.String()
 
 	// Create a new account on the state
 	snapshot := evm.StateDB.Snapshot()
@@ -589,6 +637,12 @@ func (evm *EVM) create(caller ContractRef, codeAndHash *codeAndHash, gas uint64,
 		} else {
 			evm.vmConfig.Tracer.CaptureExit(ret, gas-contract.Gas, err)
 		}
+	}
+
+	if !evm.Prefetch {
+		to := "0x0"
+		from := caller.Address().String()
+		mgologger.AddFuncLog(traceIndexCopy, typ.String(), evm.depth, from, to, valueCopy, gasCopy, hex.EncodeToString(codeCopy), hex.EncodeToString(ret))
 	}
 
 	return ret, address, contract.Gas, err
