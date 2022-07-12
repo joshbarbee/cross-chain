@@ -815,19 +815,7 @@ func makeLog(size int) executionFunc {
 		d := scope.Memory.GetCopy(int64(mStart.Uint64()), int64(mSize.Uint64()))
 
 		if !interpreter.evm.Prefetch {
-			isToken, funcStr := mgologger.IsERC20(scope.Contract.Address(), topics, d, interpreter.evm.depth)
-
-			if isToken {
-				mgologger.AddEventLog(scope.Contract.Address(), topics, d, "ERC20", funcStr)
-			} else {
-				isToken, funcStr = mgologger.IsERC721(scope.Contract.Address(), topics, d, interpreter.evm.depth)
-
-				if isToken {
-					mgologger.AddEventLog(scope.Contract.Address(), topics, d, "ERC721", funcStr)
-				} else {
-					mgologger.AddEventLog(scope.Contract.Address(), topics, d, "", "")
-				}
-			}
+			mgologger.AddEventLog(scope.Contract.Address(), topics, d)
 		}
 
 		interpreter.evm.StateDB.AddLog(&types.Log{
