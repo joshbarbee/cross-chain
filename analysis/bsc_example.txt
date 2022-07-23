@@ -1,0 +1,155 @@
+Contract: DPRBridge at 0x375223d6ed2b7e08bf7fc552d72eba403e4b9406
+Constructor args: 000000000000000000000000a0a2ee912caf7921eaabc866c6ef6fec8f7e90a4000000000000000000000000e7bd71e484a0d13b8cbe47cf261eb5af1588d6b1
+Events: [
+ConfirmWithdrawMessage (0xad4196e08b3ec58f1f1ef28456c1dfb13424a9476163d34c28580370804f3393): 
+	type: bytes32 name: messageID indexed: False, 
+RelayMessage (0xfb65d1544ea97e32c62baf55f738f7bb44671998c927415ef03e52d2477e292f): 
+	type: bytes32 name: messageID indexed: False
+	type: address name: sender indexed: False
+	type: bytes32 name: recipient indexed: False
+	type: uint256 name: amount indexed: False, 
+RevertMessage (0x2d83618e570f4b4e76854856b7bb06ee455ae36f3c6cc65984ab095389aad5d2): 
+	type: bytes32 name: messageID indexed: False
+	type: address name: sender indexed: False
+	type: uint256 name: amount indexed: False, 
+WithdrawMessage (0x5473dff3f715e6a201118e7235059f5c6ecca0db8a0bace52bd370e6ea135422): 
+	type: bytes32 name: MessageID indexed: False
+	type: address name: recipient indexed: False
+	type: bytes32 name: substrateSender indexed: False
+	type: uint256 name: amount indexed: False
+	type: bytes name: sig indexed: False]
+Functions: [
+cancelWithdraw (constant: False, payable: False) state mutability: nonpayable
+Signature: 0x841d51f6
+	Inputs:
+		bytes32: messageID
+	Outputs:
+		, 
+changeSubmiter (constant: False, payable: False) state mutability: nonpayable
+Signature: 0xaba5cc4e
+	Inputs:
+		address: _newSubmiter
+	Outputs:
+		, 
+confirmWithdrawTransfer (constant: False, payable: False) state mutability: nonpayable
+Signature: 0x8c82832b
+	Inputs:
+		bytes32: messageID
+		bytes: signature
+	Outputs:
+		, 
+contract_deposit_info (constant: True, payable: False) state mutability: view
+Signature: 0xdb4f379a
+	Inputs:
+		
+	Outputs:
+		uint256: last_deposit_time
+		uint256: deposit_amount, 
+contract_withdraw_info (constant: True, payable: False) state mutability: view
+Signature: 0x2cf33852
+	Inputs:
+		
+	Outputs:
+		uint256: last_withdraw_time
+		uint256: withdraw_amount, 
+messages (constant: True, payable: False) state mutability: view
+Signature: 0x2bbd59ca
+	Inputs:
+		bytes32: 
+	Outputs:
+		bytes32: messageID
+		address: spender
+		bytes32: substrateAddress
+		uint256: availableAmount
+		uint8: status, 
+owner (constant: True, payable: False) state mutability: view
+Signature: 0x8da5cb5b
+	Inputs:
+		
+	Outputs:
+		address: , 
+revertTransfer (constant: False, payable: False) state mutability: nonpayable
+Signature: 0xf279db4a
+	Inputs:
+		bytes32: messageID
+	Outputs:
+		, 
+setDailyMax (constant: False, payable: False) state mutability: nonpayable
+Signature: 0x8fb6f382
+	Inputs:
+		uint256: max_amount
+	Outputs:
+		bool: , 
+setTransfer (constant: False, payable: False) state mutability: nonpayable
+Signature: 0xc0314226
+	Inputs:
+		uint256: amount
+		bytes32: substrateAddress
+	Outputs:
+		, 
+setUserDailyMax (constant: False, payable: False) state mutability: nonpayable
+Signature: 0xe950f1f6
+	Inputs:
+		uint256: max_amount
+	Outputs:
+		bool: , 
+setUserMax (constant: False, payable: False) state mutability: nonpayable
+Signature: 0x90478ddc
+	Inputs:
+		uint256: max_amount
+	Outputs:
+		bool: , 
+setUserMin (constant: False, payable: False) state mutability: nonpayable
+Signature: 0xcca14b1f
+	Inputs:
+		uint256: min_amount
+	Outputs:
+		bool: , 
+submiter (constant: True, payable: False) state mutability: view
+Signature: 0x42ccfacb
+	Inputs:
+		
+	Outputs:
+		address: , 
+token (constant: True, payable: False) state mutability: view
+Signature: 0xfc0c546a
+	Inputs:
+		
+	Outputs:
+		address: , 
+transferOwnerShip (constant: False, payable: False) state mutability: nonpayable
+Signature: 0x8863dd1a
+	Inputs:
+		address: _newOwner
+	Outputs:
+		, 
+user_deposit_info (constant: True, payable: False) state mutability: view
+Signature: 0xf8e62c8a
+	Inputs:
+		address: 
+	Outputs:
+		uint256: last_deposit_time
+		uint256: deposit_amount, 
+user_withdraw_info (constant: True, payable: False) state mutability: view
+Signature: 0x4e8733e0
+	Inputs:
+		address: 
+	Outputs:
+		uint256: last_withdraw_time
+		uint256: withdraw_amount, 
+withdrawAllTokens (constant: False, payable: False) state mutability: nonpayable
+Signature: 0xb56effbb
+	Inputs:
+		address: _token
+		uint256: amount
+	Outputs:
+		, 
+withdrawTransfer (constant: False, payable: False) state mutability: nonpayable
+Signature: 0x836c9834
+	Inputs:
+		bytes32: substrateSender
+		address: recipient
+		uint256: availableAmount
+		bytes: sig
+	Outputs:
+		]

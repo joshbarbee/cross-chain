@@ -1,0 +1,231 @@
+Contract: TetherToken at 0xdAC17F958D2ee523a2206206994597C13D831ec7
+Constructor args: 000000000000000000000000000000000000000000000000000000174876e800000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a546574686572205553440000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000045553445400000000000000000000000000000000000000000000000000000000
+Events: [
+Issue (0xcb8241adb0c3fdb35b70c24ce35c5eb0c17af7431c99f827d44a445ca624176a): 
+	type: uint256 name: amount indexed: False, 
+Redeem (0x702d5967f45f6513a38ffc42d6ba9bf230bd40e8f53b16363c7eb4fd2deb9a44): 
+	type: uint256 name: amount indexed: False, 
+Deprecate (0xcc358699805e9a8b7f77b522628c7cb9abd07d9efb86b6fb616af1609036a99e): 
+	type: address name: newAddress indexed: False, 
+Params (0xb044a1e409eac5c48e5af22d4af52670dd1a99059537a78b31b48c6500a6354e): 
+	type: uint256 name: feeBasisPoints indexed: False
+	type: uint256 name: maxFee indexed: False, 
+DestroyedBlackFunds (0x61e6e66b0d6339b2980aecc6ccc0039736791f0ccde9ed512e789a7fbdd698c6): 
+	type: address name: _blackListedUser indexed: False
+	type: uint256 name: _balance indexed: False, 
+AddedBlackList (0x42e160154868087d6bfdc0ca23d96a1c1cfa32f1b72ba9ba27b69b98a0d819dc): 
+	type: address name: _user indexed: False, 
+RemovedBlackList (0xd7e9ec6e6ecd65492dce6bf513cd6867560d49544421d0783ddf06e76c24470c): 
+	type: address name: _user indexed: False, 
+Approval (0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925): 
+	type: address name: owner indexed: True
+	type: address name: spender indexed: True
+	type: uint256 name: value indexed: False, 
+Transfer (0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef): 
+	type: address name: from indexed: True
+	type: address name: to indexed: True
+	type: uint256 name: value indexed: False, 
+Pause (0x6985a02210a168e66602d3235cb6db0e70f92b3ba4d376a33c0f3d9434bff625): 
+	, 
+Unpause (0x7805862f689e2f13df9f062ff482ad3ad112aca9e0847911ed832e158c525b33): 
+	]
+Functions: [
+name (constant: True, payable: False) state mutability: view
+Signature: 0x06fdde03
+	Inputs:
+		
+	Outputs:
+		string: , 
+deprecate (constant: False, payable: False) state mutability: nonpayable
+Signature: 0x0753c30c
+	Inputs:
+		address: _upgradedAddress
+	Outputs:
+		, 
+approve (constant: False, payable: False) state mutability: nonpayable
+Signature: 0x095ea7b3
+	Inputs:
+		address: _spender
+		uint256: _value
+	Outputs:
+		, 
+deprecated (constant: True, payable: False) state mutability: view
+Signature: 0x0e136b19
+	Inputs:
+		
+	Outputs:
+		bool: , 
+addBlackList (constant: False, payable: False) state mutability: nonpayable
+Signature: 0x0ecb93c0
+	Inputs:
+		address: _evilUser
+	Outputs:
+		, 
+totalSupply (constant: True, payable: False) state mutability: view
+Signature: 0x18160ddd
+	Inputs:
+		
+	Outputs:
+		uint256: , 
+transferFrom (constant: False, payable: False) state mutability: nonpayable
+Signature: 0x23b872dd
+	Inputs:
+		address: _from
+		address: _to
+		uint256: _value
+	Outputs:
+		, 
+upgradedAddress (constant: True, payable: False) state mutability: view
+Signature: 0x26976e3f
+	Inputs:
+		
+	Outputs:
+		address: , 
+balances (constant: True, payable: False) state mutability: view
+Signature: 0x27e235e3
+	Inputs:
+		address: 
+	Outputs:
+		uint256: , 
+decimals (constant: True, payable: False) state mutability: view
+Signature: 0x313ce567
+	Inputs:
+		
+	Outputs:
+		uint256: , 
+maximumFee (constant: True, payable: False) state mutability: view
+Signature: 0x35390714
+	Inputs:
+		
+	Outputs:
+		uint256: , 
+_totalSupply (constant: True, payable: False) state mutability: view
+Signature: 0x3eaaf86b
+	Inputs:
+		
+	Outputs:
+		uint256: , 
+unpause (constant: False, payable: False) state mutability: nonpayable
+Signature: 0x3f4ba83a
+	Inputs:
+		
+	Outputs:
+		, 
+getBlackListStatus (constant: True, payable: False) state mutability: view
+Signature: 0x59bf1abe
+	Inputs:
+		address: _maker
+	Outputs:
+		bool: , 
+allowed (constant: True, payable: False) state mutability: view
+Signature: 0x5c658165
+	Inputs:
+		address: 
+		address: 
+	Outputs:
+		uint256: , 
+paused (constant: True, payable: False) state mutability: view
+Signature: 0x5c975abb
+	Inputs:
+		
+	Outputs:
+		bool: , 
+balanceOf (constant: True, payable: False) state mutability: view
+Signature: 0x70a08231
+	Inputs:
+		address: who
+	Outputs:
+		uint256: , 
+pause (constant: False, payable: False) state mutability: nonpayable
+Signature: 0x8456cb59
+	Inputs:
+		
+	Outputs:
+		, 
+getOwner (constant: True, payable: False) state mutability: view
+Signature: 0x893d20e8
+	Inputs:
+		
+	Outputs:
+		address: , 
+owner (constant: True, payable: False) state mutability: view
+Signature: 0x8da5cb5b
+	Inputs:
+		
+	Outputs:
+		address: , 
+symbol (constant: True, payable: False) state mutability: view
+Signature: 0x95d89b41
+	Inputs:
+		
+	Outputs:
+		string: , 
+transfer (constant: False, payable: False) state mutability: nonpayable
+Signature: 0xa9059cbb
+	Inputs:
+		address: _to
+		uint256: _value
+	Outputs:
+		, 
+setParams (constant: False, payable: False) state mutability: nonpayable
+Signature: 0xc0324c77
+	Inputs:
+		uint256: newBasisPoints
+		uint256: newMaxFee
+	Outputs:
+		, 
+issue (constant: False, payable: False) state mutability: nonpayable
+Signature: 0xcc872b66
+	Inputs:
+		uint256: amount
+	Outputs:
+		, 
+redeem (constant: False, payable: False) state mutability: nonpayable
+Signature: 0xdb006a75
+	Inputs:
+		uint256: amount
+	Outputs:
+		, 
+allowance (constant: True, payable: False) state mutability: view
+Signature: 0xdd62ed3e
+	Inputs:
+		address: _owner
+		address: _spender
+	Outputs:
+		uint256: remaining, 
+basisPointsRate (constant: True, payable: False) state mutability: view
+Signature: 0xdd644f72
+	Inputs:
+		
+	Outputs:
+		uint256: , 
+isBlackListed (constant: True, payable: False) state mutability: view
+Signature: 0xe47d6060
+	Inputs:
+		address: 
+	Outputs:
+		bool: , 
+removeBlackList (constant: False, payable: False) state mutability: nonpayable
+Signature: 0xe4997dc5
+	Inputs:
+		address: _clearedUser
+	Outputs:
+		, 
+MAX_UINT (constant: True, payable: False) state mutability: view
+Signature: 0xe5b5019a
+	Inputs:
+		
+	Outputs:
+		uint256: , 
+transferOwnership (constant: False, payable: False) state mutability: nonpayable
+Signature: 0xf2fde38b
+	Inputs:
+		address: newOwner
+	Outputs:
+		, 
+destroyBlackFunds (constant: False, payable: False) state mutability: nonpayable
+Signature: 0xf3bdc228
+	Inputs:
+		address: _blackListedUser
+	Outputs:
+		]
