@@ -36,7 +36,7 @@ if args.chain == "bsc":
 
     if args.transaction != None:
         tx = Transaction(args.transaction, fetch, store)
-        tx.interacted_functions()
+        print(tx.interacted_functions())
         print(tx)
 
 if args.chain == "eth":
@@ -47,5 +47,5 @@ if args.chain == "eth":
 
     if args.transaction != None:
         tx = Transaction(args.transaction, fetch, store)
-        tx.interacted_functions()
+        print(tx.interacted_functions())
         print(tx)

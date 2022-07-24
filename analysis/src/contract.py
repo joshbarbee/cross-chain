@@ -209,9 +209,9 @@ class Contract():
         """ 
         return isinstance(o, type(self)) and o.address == self.address
 
-    def get_func_signatures(self) -> [str]: 
+    def get_func_signatures(self) -> dict[str,[str]]: 
         """ 
             Returns a list of all the function signatures for the contract
         """
 
-        return [i.signature for i in self.functions]
+        return {self.address :[i.signature for i in self.functions]}

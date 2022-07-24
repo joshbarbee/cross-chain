@@ -20,11 +20,16 @@ class Call():
         self.type = calltype
         self.depth = depth
 
+        self.contract = None
+
+    def set_contract(self, contract : Contract) -> None:
+        self.contract = contract
+
     def __str__(self) -> str:
-        return f"{self.type} | {self.hash}: {self.index}, {self.depth} ({self._from}->{self._to}"
+        return f"{self.type} | {self.hash}: {self.index}, {self.depth} ({self._from}->{self._to} at contract {self.contract.contract_name}"
 
     def __repr__(self) -> str:
-        return f"{self.type} | {self.hash}: {self.index}, {self.depth} ({self._from}->{self._to}"
+        return f"{self.type} | {self.hash}: {self.index}, {self.depth} ({self._from}->{self._to} at contract {self.contract.contract_name}"
 
 class Transaction():
     """
@@ -44,7 +49,7 @@ class Transaction():
         self.contracts : [Contract] = []
         self.store = store
 
-        self.function_signatures = []
+        self.function_signatures : dict[str, [str]] = {}
 
         self.calls : [Call] = []
 
@@ -103,7 +108,7 @@ class Transaction():
                 f"Contracts: \n{self.contracts}")
 
 
-    def interacted_functions(self) -> dict[str, str]:
+    def interacted_functions(self) -> [str]:
         """
             Returns all functions that the transaction interacts with out of
             all the verified contracts the transaction interacts with. Must be
@@ -113,12 +118,10 @@ class Transaction():
         res = {}
 
         for contract in self.contracts:
-            self.function_signatures.extend(contract.get_func_signatures())
+            self.function_signatures.update(contract.get_func_signatures())
 
-        print(self.function_signatures)
         for call in self.calls:
-            if call.input[2:10] in self.function_signatures:
-                print(call)
+            if call._to in self.function_signatures and call.input[2:10] in self.function_signatures[call._to]:
+                call.set_contract(self.store.get_contract(call._to))
 
-        return res
-        
+        return [i for i in self.calls if i.contract != None]
