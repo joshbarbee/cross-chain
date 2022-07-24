@@ -11,3 +11,8 @@ class InvalidRequest(Exception):
         Risen when the apiKey or other parameters passed are an invalid format,
         leading to a non-200 status
     """
+
+class MongoTxNotFound(Exception):
+    """
+        Risen when the transaction is not found in the provided database and collection
+    """

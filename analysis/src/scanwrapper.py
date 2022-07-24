@@ -49,13 +49,15 @@ class BaseContractScanner():
             if req.status_code != 200:
                 raise InvalidRequest(
                     "The passed paremeters were not valid for this endpoint")
-            if 'status' in req.json() and req.json()['status'] == '0':
+
+            json = req.json()
+            if (('status' in json and json['status'] == '0')
+                or ('status' in json and json['status'] == '1' and json['result'][0]['SourceCode'] == "")):
                 raise ContractNotFound(
                     "The specified contract was not found for this endpoint")
 
             res = req.json()['result'][0]
 
-           
             return Contract(address, res['SourceCode'], res['ABI'], res['ContractName'], res['ConstructorArguments'])
         except ContractNotFound:
             return None
@@ -80,6 +82,8 @@ class BaseContractScanner():
 
             if contract != None:
                 res[address] = contract
+
+        return res
 
     def output_contract(self, address: str, filepath=None, output_on_empty=True) -> None:
         """
@@ -121,6 +125,7 @@ class BSCContractScanner(BaseContractScanner):
     def __init__(self, api_key: str) -> None:
         super().__init__(api_key,
                          "https://api.bscscan.com/api?module=contract&action=getsourcecode&")
+
 
 class EthContractScanner(BaseContractScanner):
     """

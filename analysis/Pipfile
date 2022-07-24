@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 requests = "*"
 pycryptodome = "*"
+pymongo = "*"
 
 [dev-packages]
 pycodestyle = "*"
@@ -18,5 +19,5 @@ python_version = "3.10"
 
 [scripts]
 lint-fix = "autopep8 . --recursive --in-place --pep8-passes 2000 --verbose"
-dev-bsc = "python contractscanner.py 0x375223d6ed2b7e08bf7fc552d72eba403e4b9406 --chain bsc"
-dev-eth = "python contractscanner.py 0xdAC17F958D2ee523a2206206994597C13D831ec7 --chain eth"
+dev-bsc = "python ./src/main.py -tx 0x86f8150537284b105e0227f356afd46a87027333ed5a2af29cf30c49f87fe486 --chain bsc"
+dev-eth = "python ./src/main.py 0xdAC17F958D2ee523a2206206994597C13D831ec7 --chain eth"

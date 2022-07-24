@@ -6,11 +6,13 @@
 import json
 from Crypto.Hash import keccak
 
+
 class Event():
     """
         Class to contain information about a specific event
     """
-    def __init__(self, name : str, args : []) -> None:
+
+    def __init__(self, name: str, args: []) -> None:
         self.name = name
         self.args = args
 
@@ -22,22 +24,23 @@ class Event():
             String representation of event
         """
 
-        inputs = [f"type: {i['type']} name: {i['name']} indexed: {i['indexed']}" for i in self.args]
+        inputs = [
+            f"type: {i['type']} name: {i['name']} indexed: {i['indexed']}" for i in self.args]
 
         fstring = "\n\t"
         return f"\n{self.name} (0x{self.signature}): \n\t{fstring.join(inputs)}"
-        
+
     def __repr__(self) -> str:
         """
             Representation of event for lists and such
         """
 
-        inputs = [f"type: {i['type']} name: {i['name']} indexed: {i['indexed']}" for i in self.args]
+        inputs = [
+            f"type: {i['type']} name: {i['name']} indexed: {i['indexed']}" for i in self.args]
 
         fstring = "\n\t"
         return f"\n{self.name} (0x{self.signature}): \n\t{fstring.join(inputs)}"
 
-    
     def __create_signature(self) -> str:
         """
             Creates the function signature of this
@@ -51,12 +54,13 @@ class Event():
 
         return self.k.hexdigest()
 
+
 class Function():
     """
         Class to contain information about a specific function
     """
 
-    def __init__(self, name : str, inputs : list, outputs : list, payable : bool, constant : bool, state_mutability : str) -> None:
+    def __init__(self, name: str, inputs: list, outputs: list, payable: bool, constant: bool, state_mutability: str) -> None:
         self.name = name
         self.inputs = inputs
         self.outputs = outputs
@@ -66,7 +70,6 @@ class Function():
 
         self.k = keccak.new(digest_bits=256)
         self.signature = self.__create_signature()
-    
 
     def __format_io(self) -> str:
         """
@@ -82,7 +85,7 @@ class Function():
                 name: i['name'],
                 internal_type: i['internalType'] if 'internalType' in i else i['type']
             })
-        
+
         for i in self.outputs:
             outputs.append({
                 type: i['type'],
@@ -100,13 +103,15 @@ class Function():
 
         fstring = "\n\t\t"
 
-        inputs_str = fstring.join([f"{i['type']}: {i['name']}" for i in self.inputs]) if len(self.inputs) > 0 else ""
-        outputs_str = fstring.join([f"{i['type']}: {i['name']}" for i in self.outputs]) if len(self.outputs) > 0 else ""
+        inputs_str = fstring.join(
+            [f"{i['type']}: {i['name']}" for i in self.inputs]) if len(self.inputs) > 0 else ""
+        outputs_str = fstring.join(
+            [f"{i['type']}: {i['name']}" for i in self.outputs]) if len(self.outputs) > 0 else ""
 
         return (f"\n{self.name} (constant: {self.constant}, payable: {self.payable}) state mutability: {self.state_mutability}"
-                 f"\nSignature: 0x{self.signature}"
-                 f"\n\tInputs:{fstring}{inputs_str}\n\tOutputs:{fstring}{outputs_str}")
-        
+                f"\nSignature: 0x{self.signature}"
+                f"\n\tInputs:{fstring}{inputs_str}\n\tOutputs:{fstring}{outputs_str}")
+
     def __repr__(self) -> str:
         """
             Representation of a function
@@ -114,12 +119,14 @@ class Function():
 
         fstring = "\n\t\t"
 
-        inputs_str = fstring.join([f"{i['type']}: {i['name']}" for i in self.inputs]) if len(self.inputs) > 0 else ""
-        outputs_str = fstring.join([f"{i['type']}: {i['name']}" for i in self.outputs]) if len(self.outputs) > 0 else ""
+        inputs_str = fstring.join(
+            [f"{i['type']}: {i['name']}" for i in self.inputs]) if len(self.inputs) > 0 else ""
+        outputs_str = fstring.join(
+            [f"{i['type']}: {i['name']}" for i in self.outputs]) if len(self.outputs) > 0 else ""
 
         return (f"\n{self.name} (constant: {self.constant}, payable: {self.payable}) state mutability: {self.state_mutability}"
-                 f"\nSignature: 0x{self.signature}"
-                 f"\n\tInputs:{fstring}{inputs_str}\n\tOutputs:{fstring}{outputs_str}")
+                f"\nSignature: 0x{self.signature}"
+                f"\n\tInputs:{fstring}{inputs_str}\n\tOutputs:{fstring}{outputs_str}")
 
     def __create_signature(self) -> str:
         """
@@ -132,6 +139,7 @@ class Function():
         self.k.update(string)
 
         return self.k.hexdigest()[0:8]
+
 
 class Contract():
     """
@@ -171,7 +179,11 @@ class Contract():
 
         for row in self.abi:
             if row["type"] == "function":
-                functions.append(Function(row["name"], row["inputs"], row["outputs"], row['payable'], row['constant'], row['stateMutability']))
+                payable = row['payable'] if 'payable' in row else False
+                constant = row['constant'] if 'constant' in row else False
+
+                functions.append(Function(
+                    row["name"], row["inputs"], row["outputs"], payable, constant, row['stateMutability']))
 
         return functions
 
@@ -180,4 +192,26 @@ class Contract():
                 f"Constructor args: {self.constructor_args}\n"
                 f"Events: {[i for i in self.events]}\n"
                 f"Functions: {[i for i in self.functions]}")
-              
+
+    def __repr__(self) -> str:
+        return (f"Contract: {self.contract_name} at {self.address}\n")
+
+    def __hash__(self) -> int:
+        """
+            Addresses are already unique, but we hash again to ensure uniform distribution
+        """
+        return hash(self.address)
+
+    def __eq__(self, o) -> bool:
+        """
+            Again, taking advantage of address being unique. We avoid any complications with deep nested equalities from the events
+            and functions this way
+        """ 
+        return isinstance(o, type(self)) and o.address == self.address
+
+    def get_func_signatures(self) -> [str]: 
+        """ 
+            Returns a list of all the function signatures for the contract
+        """
+
+        return [i.signature for i in self.functions]
