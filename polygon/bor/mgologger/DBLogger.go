@@ -225,7 +225,7 @@ func WriteEntry(block big.Int, tx common.Hash, from string, to string, value big
 		TransferLogs: transferTraceStr,
 	}
 
-	err := Db.C("bsc").Insert(trace)
+	err := Db.C("poly").Insert(trace)
 
 	trace = Collection{}
 
