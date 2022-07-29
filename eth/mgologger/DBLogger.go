@@ -105,8 +105,8 @@ func AddFuncLog(index int, ct string, d int, from string, to string, value strin
 	}
 }
 
-func AddEventLog(addr common.Address, topics []common.Hash, data []byte) {
-	Eventtrace.WriteString(fmt.Sprintf("%s,%s,0x%s\n", addr, topics, hex.EncodeToString(data)))
+func AddEventLog(addr common.Address, topics []common.Hash, data []byte, t string, function string) {
+	Eventtrace.WriteString(fmt.Sprintf("%s,%s,0x%s,%s,%s\n", addr, topics, hex.EncodeToString(data), t, function))
 }
 
 // This is invoked in 1 of 3 contexts, 2 of which occure in AddEventLog:
@@ -123,6 +123,54 @@ func AddTransferLog(from string, to string, tokenAddr string, value string, dept
 	}
 
 	Transfertrace.WriteString(output)
+}
+
+// we check if erc20 based on following info:
+// 1. if event signature is Transfer(from,to,value) or Approval(owner,spender,value)
+// 2. length of topics is 3
+func IsERC20(tokenAddr common.Address, topics []common.Hash, data []byte, depth int) (ret bool, function string) {
+	if len(topics) != 3 {
+		return false, ""
+	}
+
+	switch topics[0] {
+	case TransferSig:
+		from := topics[1].String()
+		to := topics[2].String()
+		tokenAddr := tokenAddr.String()
+		value := hex.EncodeToString(data)
+		AddTransferLog(from, to, tokenAddr, value, depth, "ERC20")
+		return true, "Transfer"
+	case ApprovalSig:
+		return true, "Approval"
+	default:
+		return false, ""
+	}
+}
+
+// we check if erc721 based on following info
+// 1. if event sig is Transfer(from,to,value) or Approval(owner,spender,value) or ApporvalForAll(address,address,bool)
+// 2. length of topics is 4
+func IsERC721(tokenAddr common.Address, topics []common.Hash, data []byte, depth int) (ret bool, function string) {
+	if len(topics) != 4 {
+		return false, ""
+	}
+
+	switch topics[0] {
+	case TransferSig:
+		from := topics[1].String()
+		to := topics[2].String()
+		tokenAddr := tokenAddr.String()
+		value := hex.EncodeToString(data)
+		AddTransferLog(from, to, tokenAddr, value, depth, "ERC721")
+		return true, "Transfer"
+	case ApprovalSig:
+		return true, "Approval"
+	case ApprovalForAllSig:
+		return true, "ApprovalForAll"
+	default:
+		return false, ""
+	}
 }
 
 func WriteEntry(block big.Int, tx common.Hash, from string, to string, value big.Int, gasPrice big.Int, gasUsed uint64, extra string) {

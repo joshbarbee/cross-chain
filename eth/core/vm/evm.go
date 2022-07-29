@@ -126,7 +126,7 @@ type EVM struct {
 	callGasTemp uint64
 
 	// var to log whether prefetch is executing or tx actually being applied
-	prefetch bool
+	Prefetch bool
 }
 
 // NewEVM returns a new EVM. The returned EVM is not thread safe and should
@@ -139,8 +139,9 @@ func NewEVM(blockCtx BlockContext, txCtx TxContext, statedb StateDB, chainConfig
 		Config:      config,
 		chainConfig: chainConfig,
 		chainRules:  chainConfig.Rules(blockCtx.BlockNumber, blockCtx.Random != nil),
-		prefetch:    config.Prefetch,
+		Prefetch:    config.Prefetch,
 	}
+
 	evm.interpreter = NewEVMInterpreter(evm, config)
 	return evm
 }
@@ -207,7 +208,7 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 		}
 		evm.StateDB.CreateAccount(addr)
 	}
-	evm.Context.Transfer(evm.StateDB, caller.Address(), addr, value, evm.prefetch, evm.depth)
+	evm.Context.Transfer(evm.StateDB, caller.Address(), addr, value, evm.Prefetch, evm.depth)
 
 	// Capture the tracer start/end events in debug mode
 	if evm.Config.Debug {
@@ -233,7 +234,7 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 		code := evm.StateDB.GetCode(addr)
 
 		traceIndexCopy := mgologger.TraceIndex
-		if !evm.prefetch {
+		if !evm.Prefetch {
 			mgologger.TraceIndex++
 			mgologger.CallStack[evm.depth] = uint(traceIndexCopy)
 		}
@@ -252,7 +253,7 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 			gas = contract.Gas
 		}
 
-		if !evm.prefetch {
+		if !evm.Prefetch {
 			to := addr.String()
 			from := caller.Address().String()
 			mgologger.AddFuncLog(traceIndexCopy, "CALL", evm.depth, from, to, valueCopy, gasCopy, hex.EncodeToString(inputCopy), hex.EncodeToString(ret))
@@ -316,7 +317,7 @@ func (evm *EVM) CallCode(caller ContractRef, addr common.Address, input []byte, 
 	} else {
 		traceIndexCopy := mgologger.TraceIndex
 
-		if !evm.prefetch {
+		if !evm.Prefetch {
 			mgologger.TraceIndex++
 			mgologger.CallStack[evm.depth] = uint(traceIndexCopy)
 		}
@@ -329,7 +330,7 @@ func (evm *EVM) CallCode(caller ContractRef, addr common.Address, input []byte, 
 		ret, err = evm.interpreter.Run(contract, input, false)
 		gas = contract.Gas
 
-		if !evm.prefetch {
+		if !evm.Prefetch {
 			to := addr.String()
 			from := caller.Address().String()
 			mgologger.AddFuncLog(traceIndexCopy, "CALLCODE", evm.depth, from, to, valueCopy, gasCopy, hex.EncodeToString(inputCopy), hex.EncodeToString(ret))
@@ -375,7 +376,7 @@ func (evm *EVM) DelegateCall(caller ContractRef, addr common.Address, input []by
 	} else {
 		traceIndexCopy := mgologger.TraceIndex
 
-		if !evm.prefetch {
+		if !evm.Prefetch {
 			mgologger.TraceIndex++
 			mgologger.CallStack[evm.depth] = uint(traceIndexCopy)
 		}
@@ -387,7 +388,7 @@ func (evm *EVM) DelegateCall(caller ContractRef, addr common.Address, input []by
 		ret, err = evm.interpreter.Run(contract, input, false)
 		gas = contract.Gas
 
-		if !evm.prefetch {
+		if !evm.Prefetch {
 			to := addr.String()
 			from := caller.Address().String()
 			mgologger.AddFuncLog(traceIndexCopy, "DELEGATECALL", evm.depth, from, to, "0", gasCopy, hex.EncodeToString(inputCopy), hex.EncodeToString(ret))
@@ -443,7 +444,7 @@ func (evm *EVM) StaticCall(caller ContractRef, addr common.Address, input []byte
 		ret, gas, err = RunPrecompiledContract(p, input, gas)
 	} else {
 		traceIndexCopy := mgologger.TraceIndex
-		if !evm.prefetch {
+		if !evm.Prefetch {
 			mgologger.TraceIndex++
 			mgologger.CallStack[evm.depth] = uint(traceIndexCopy)
 		}
@@ -462,7 +463,7 @@ func (evm *EVM) StaticCall(caller ContractRef, addr common.Address, input []byte
 		ret, err = evm.interpreter.Run(contract, input, true)
 		gas = contract.Gas
 
-		if !evm.prefetch {
+		if !evm.Prefetch {
 			to := addr.String()
 			from := caller.Address().String()
 			mgologger.AddFuncLog(traceIndexCopy, "STATICCALL", evm.depth, from, to, "0", gasCopy, hex.EncodeToString(inputCopy), hex.EncodeToString(ret))
@@ -527,7 +528,7 @@ func (evm *EVM) create(caller ContractRef, codeAndHash *codeAndHash, gas uint64,
 	if evm.chainRules.IsEIP158 {
 		evm.StateDB.SetNonce(address, 1)
 	}
-	evm.Context.Transfer(evm.StateDB, caller.Address(), address, value, evm.prefetch, evm.depth)
+	evm.Context.Transfer(evm.StateDB, caller.Address(), address, value, evm.Prefetch, evm.depth)
 
 	// Initialise a new contract and set the code that is to be used by the EVM.
 	// The contract is a scoped environment for this execution context only.
@@ -545,7 +546,7 @@ func (evm *EVM) create(caller ContractRef, codeAndHash *codeAndHash, gas uint64,
 	start := time.Now()
 
 	traceIndexCopy := mgologger.TraceIndex
-	if !evm.prefetch {
+	if !evm.Prefetch {
 		mgologger.CallStack[evm.depth] = uint(traceIndexCopy)
 		mgologger.TraceIndex++
 	}
@@ -592,7 +593,7 @@ func (evm *EVM) create(caller ContractRef, codeAndHash *codeAndHash, gas uint64,
 		}
 	}
 
-	if !evm.prefetch {
+	if !evm.Prefetch {
 		to := "0x0"
 		from := caller.Address().String()
 		mgologger.AddFuncLog(traceIndexCopy, typ.String(), evm.depth, from, to, valueCopy, gasCopy, hex.EncodeToString(codeCopy), hex.EncodeToString(ret))

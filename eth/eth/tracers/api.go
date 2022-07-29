@@ -903,7 +903,7 @@ func (api *API) traceTx(ctx context.Context, message core.Message, txctx *Contex
 		tracer = logger.NewStructLogger(config.Config)
 	}
 	// Run the transaction with tracing enabled.
-	vmenv := vm.NewEVM(vmctx, txContext, statedb, api.backend.ChainConfig(), vm.Config{Debug: true, Tracer: tracer, NoBaseFee: true})
+	vmenv := vm.NewEVM(vmctx, txContext, statedb, api.backend.ChainConfig(), vm.Config{Debug: true, Tracer: tracer, NoBaseFee: true, Prefetch: false})
 
 	// Call Prepare to clear out the statedb access list
 	statedb.Prepare(txctx.TxHash, txctx.TxIndex)

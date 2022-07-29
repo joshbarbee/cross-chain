@@ -44,7 +44,6 @@ require (
 	github.com/influxdata/line-protocol v0.0.0-20210311194329-9aa0e372d097 // indirect
 	github.com/jackpal/go-nat-pmp v1.0.2
 	github.com/jedisct1/go-minisign v0.0.0-20190909160543-45766022959e
-	github.com/joho/godotenv v1.4.0
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/karalabe/usb v0.0.2
 	github.com/kylelemons/godebug v1.1.0 // indirect
@@ -63,7 +62,6 @@ require (
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 	github.com/tklauser/go-sysconf v0.3.5 // indirect
 	github.com/tyler-smith/go-bip39 v1.0.1-0.20181017060643-dbb3b84ba2ef
-	go.mongodb.org/mongo-driver v1.8.3
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
