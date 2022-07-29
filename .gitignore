@@ -107,3 +107,4 @@ cmd/geth/__debug_bin
 **/data
 
 **/mainnet-**
+**/build/bin/geth
