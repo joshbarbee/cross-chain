@@ -134,9 +134,6 @@ func applyTransaction(msg types.Message, config *params.ChainConfig, bc ChainCon
 		to = msg.To().String()
 	}
 
-	fmt.Println(*(receipt.BlockNumber), *msg.Value())
-	fmt.Println(tx.Hash(), msg.From().String())
-	fmt.Println(*msg.GasPrice(), result.UsedGas)
 	if !evm.Prefetch {
 		mgologger.WriteEntry(*(receipt.BlockNumber), tx.Hash(), msg.From().String(), to, *msg.Value(), *msg.GasPrice(), result.UsedGas, "")
 	}

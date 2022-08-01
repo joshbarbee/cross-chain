@@ -27,13 +27,10 @@ import (
 	"testing"
 	"time"
 
-	"go.uber.org/goleak"
-
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/leak"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -41,8 +38,6 @@ import (
 )
 
 func TestSimulatedBackend(t *testing.T) {
-	defer goleak.VerifyNone(t, leak.IgnoreList()...)
-
 	var gasLimit uint64 = 8000029
 	key, _ := crypto.GenerateKey() // nolint: gosec
 	auth, _ := bind.NewKeyedTransactorWithChainID(key, big.NewInt(1337))

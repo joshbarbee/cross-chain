@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	"github.com/ethereum/go-ethereum/log"
@@ -24,17 +23,6 @@ type Command struct {
 	configFile []string
 
 	srv *Server
-}
-
-// MarkDown implements cli.MarkDown interface
-func (c *Command) MarkDown() string {
-	items := []string{
-		"# Server",
-		"The ```bor server``` command runs the Bor client.",
-		c.Flags().MarkDown(),
-	}
-
-	return strings.Join(items, "\n\n")
 }
 
 // Help implements the cli.Command interface

@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"strings"
 
 	"github.com/ethereum/go-ethereum/internal/cli/flagset"
 	"github.com/ethereum/go-ethereum/internal/cli/server/proto"
@@ -13,17 +12,6 @@ type PeersRemoveCommand struct {
 	*Meta2
 
 	trusted bool
-}
-
-// MarkDown implements cli.MarkDown interface
-func (p *PeersRemoveCommand) MarkDown() string {
-	items := []string{
-		"# Peers remove",
-		"The ```peers remove <enode>``` command disconnects the local client from a connected peer if exists.",
-		p.Flags().MarkDown(),
-	}
-
-	return strings.Join(items, "\n\n")
 }
 
 // Help implements the cli.Command interface
@@ -80,6 +68,5 @@ func (c *PeersRemoveCommand) Run(args []string) int {
 		c.UI.Error(err.Error())
 		return 1
 	}
-
 	return 0
 }

@@ -1,9 +1,8 @@
+
 # Peers add
 
 The ```peers add <enode>``` command joins the local client to another remote peer.
 
-## Options
+## Arguments
 
-- ```address```: Address of the grpc endpoint
-
-- ```trusted```: Add the peer as a trusted
+- ```trusted```: Whether the peer is added as a trusted peer.

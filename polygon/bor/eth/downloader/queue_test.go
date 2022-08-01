@@ -64,11 +64,8 @@ type chainData struct {
 	offset int
 }
 
-var (
-	chain           *chainData
-	chainLongerFork *chainData
-	emptyChain      *chainData
-)
+var chain *chainData
+var emptyChain *chainData
 
 func init() {
 	// Create a chain of blocks to import
@@ -78,9 +75,6 @@ func init() {
 
 	blocks, _ = makeChain(targetBlocks, 0, genesis, true)
 	emptyChain = &chainData{blocks, 0}
-
-	chainLongerForkBlocks, _ := makeChain(1024, 0, blocks[len(blocks)-1], false)
-	chainLongerFork = &chainData{chainLongerForkBlocks, 0}
 }
 
 func (chain *chainData) headers() []*types.Header {

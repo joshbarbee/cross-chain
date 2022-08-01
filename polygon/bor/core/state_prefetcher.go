@@ -58,7 +58,6 @@ func (p *statePrefetcher) Prefetch(block *types.Block, statedb *state.StateDB, c
 		evm          = vm.NewEVM(blockContext, vm.TxContext{}, statedb, p.config, modifedCfg)
 		signer       = types.MakeSigner(p.config, header.Number)
 	)
-
 	// Iterate over and process the individual transactions
 	byzantium := p.config.IsByzantium(block.Number())
 	for i, tx := range block.Transactions() {

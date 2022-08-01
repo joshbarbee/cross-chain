@@ -14,17 +14,6 @@ type PeersStatusCommand struct {
 	*Meta2
 }
 
-// MarkDown implements cli.MarkDown interface
-func (p *PeersStatusCommand) MarkDown() string {
-	items := []string{
-		"# Peers status",
-		"The ```peers status <peer id>``` command displays the status of a peer by its id.",
-		p.Flags().MarkDown(),
-	}
-
-	return strings.Join(items, "\n\n")
-}
-
 // Help implements the cli.Command interface
 func (p *PeersStatusCommand) Help() string {
 	return `Usage: bor peers status <peer id>
@@ -69,14 +58,12 @@ func (c *PeersStatusCommand) Run(args []string) int {
 		Enode: args[0],
 	}
 	resp, err := borClt.PeersStatus(context.Background(), req)
-
 	if err != nil {
 		c.UI.Error(err.Error())
 		return 1
 	}
 
 	c.UI.Output(formatPeer(resp.Peer))
-
 	return 0
 }
 
@@ -90,6 +77,5 @@ func formatPeer(peer *proto.Peer) string {
 		fmt.Sprintf("Static|%v", peer.Static),
 		fmt.Sprintf("Trusted|%v", peer.Trusted),
 	})
-
 	return base
 }

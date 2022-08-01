@@ -9,43 +9,18 @@ import (
 	"github.com/ethereum/go-ethereum/internal/cli/server"
 	"github.com/ethereum/go-ethereum/internal/cli/server/proto"
 	"github.com/ethereum/go-ethereum/node"
-
 	"github.com/mitchellh/cli"
 	"github.com/ryanuber/columnize"
 	"google.golang.org/grpc"
 )
 
-const (
-	emptyPlaceHolder = "<none>"
-)
-
-type MarkDownCommand interface {
-	MarkDown
-	cli.Command
-}
-
-type MarkDownCommandFactory func() (MarkDownCommand, error)
-
 func Run(args []string) int {
-	commands := Commands()
-
-	mappedCommands := make(map[string]cli.CommandFactory)
-
-	for k, v := range commands {
-		// Declare a new v to limit the scope of v to inside the block, so the anonymous function below
-		// can get the "current" value of v, instead of the value of last v in the loop.
-		// See this post: https://stackoverflow.com/questions/10116507/go-transfer-var-into-anonymous-function for more explanation
-		v := v
-		mappedCommands[k] = func() (cli.Command, error) {
-			cmd, err := v()
-			return cmd.(cli.Command), err
-		}
-	}
+	commands := commands()
 
 	cli := &cli.CLI{
 		Name:     "bor",
 		Args:     args,
-		Commands: mappedCommands,
+		Commands: commands,
 	}
 
 	exitCode, err := cli.Run()
@@ -53,11 +28,10 @@ func Run(args []string) int {
 		fmt.Fprintf(os.Stderr, "Error executing CLI: %s\n", err.Error())
 		return 1
 	}
-
 	return exitCode
 }
 
-func Commands() map[string]MarkDownCommandFactory {
+func commands() map[string]cli.CommandFactory {
 	ui := &cli.BasicUi{
 		Reader:      os.Stdin,
 		Writer:      os.Stdout,
@@ -70,113 +44,85 @@ func Commands() map[string]MarkDownCommandFactory {
 	meta := &Meta{
 		UI: ui,
 	}
-
-	return map[string]MarkDownCommandFactory{
-		"server": func() (MarkDownCommand, error) {
+	return map[string]cli.CommandFactory{
+		"server": func() (cli.Command, error) {
 			return &server.Command{
 				UI: ui,
 			}, nil
 		},
-		"version": func() (MarkDownCommand, error) {
+		"version": func() (cli.Command, error) {
 			return &VersionCommand{
 				UI: ui,
 			}, nil
 		},
-		"debug": func() (MarkDownCommand, error) {
+		"debug": func() (cli.Command, error) {
 			return &DebugCommand{
-				UI: ui,
-			}, nil
-		},
-		"debug pprof": func() (MarkDownCommand, error) {
-			return &DebugPprofCommand{
 				Meta2: meta2,
 			}, nil
 		},
-		"debug block": func() (MarkDownCommand, error) {
-			return &DebugBlockCommand{
-				Meta2: meta2,
-			}, nil
-		},
-		"chain": func() (MarkDownCommand, error) {
+		"chain": func() (cli.Command, error) {
 			return &ChainCommand{
 				UI: ui,
 			}, nil
 		},
-		"chain watch": func() (MarkDownCommand, error) {
+		"chain watch": func() (cli.Command, error) {
 			return &ChainWatchCommand{
 				Meta2: meta2,
 			}, nil
 		},
-		"chain sethead": func() (MarkDownCommand, error) {
+		"chain sethead": func() (cli.Command, error) {
 			return &ChainSetHeadCommand{
 				Meta2: meta2,
 			}, nil
 		},
-		"account": func() (MarkDownCommand, error) {
+		"account": func() (cli.Command, error) {
 			return &Account{
 				UI: ui,
 			}, nil
 		},
-		"account new": func() (MarkDownCommand, error) {
+		"account new": func() (cli.Command, error) {
 			return &AccountNewCommand{
 				Meta: meta,
 			}, nil
 		},
-		"account import": func() (MarkDownCommand, error) {
+		"account import": func() (cli.Command, error) {
 			return &AccountImportCommand{
 				Meta: meta,
 			}, nil
 		},
-		"account list": func() (MarkDownCommand, error) {
+		"account list": func() (cli.Command, error) {
 			return &AccountListCommand{
 				Meta: meta,
 			}, nil
 		},
-		"peers": func() (MarkDownCommand, error) {
+		"peers": func() (cli.Command, error) {
 			return &PeersCommand{
 				UI: ui,
 			}, nil
 		},
-		"peers add": func() (MarkDownCommand, error) {
+		"peers add": func() (cli.Command, error) {
 			return &PeersAddCommand{
 				Meta2: meta2,
 			}, nil
 		},
-		"peers remove": func() (MarkDownCommand, error) {
+		"peers remove": func() (cli.Command, error) {
 			return &PeersRemoveCommand{
 				Meta2: meta2,
 			}, nil
 		},
-		"peers list": func() (MarkDownCommand, error) {
+		"peers list": func() (cli.Command, error) {
 			return &PeersListCommand{
 				Meta2: meta2,
 			}, nil
 		},
-		"peers status": func() (MarkDownCommand, error) {
+		"peers status": func() (cli.Command, error) {
 			return &PeersStatusCommand{
 				Meta2: meta2,
 			}, nil
 		},
-		"status": func() (MarkDownCommand, error) {
+		"status": func() (cli.Command, error) {
 			return &StatusCommand{
 				Meta2: meta2,
-			}, nil
-		},
-		"fingerprint": func() (MarkDownCommand, error) {
-			return &FingerprintCommand{
-				UI: ui,
-			}, nil
-		},
-		"attach": func() (MarkDownCommand, error) {
-			return &AttachCommand{
-				UI:    ui,
-				Meta:  meta,
-				Meta2: meta2,
-			}, nil
-		},
-		"bootnode": func() (MarkDownCommand, error) {
-			return &BootnodeCommand{
-				UI: ui,
 			}, nil
 		},
 	}
@@ -197,7 +143,6 @@ func (m *Meta2) NewFlagSet(n string) *flagset.Flagset {
 		Usage:   "Address of the grpc endpoint",
 		Default: "127.0.0.1:3131",
 	})
-
 	return f
 }
 
@@ -206,7 +151,6 @@ func (m *Meta2) Conn() (*grpc.ClientConn, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to server: %v", err)
 	}
-
 	return conn, nil
 }
 
@@ -215,7 +159,6 @@ func (m *Meta2) BorConn() (proto.BorClient, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return proto.NewBorClient(conn), nil
 }
 
@@ -263,21 +206,18 @@ func (m *Meta) GetKeystore() (*keystore.KeyStore, error) {
 	scryptP := keystore.StandardScryptP
 
 	keys := keystore.NewKeyStore(keydir, scryptN, scryptP)
-
 	return keys, nil
 }
 
 func formatList(in []string) string {
 	columnConf := columnize.DefaultConfig()
-	columnConf.Empty = emptyPlaceHolder
-
+	columnConf.Empty = "<none>"
 	return columnize.Format(in, columnConf)
 }
 
 func formatKV(in []string) string {
 	columnConf := columnize.DefaultConfig()
-	columnConf.Empty = emptyPlaceHolder
+	columnConf.Empty = "<none>"
 	columnConf.Glue = " = "
-
 	return columnize.Format(in, columnConf)
 }

@@ -2,34 +2,46 @@ package server
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"math/big"
 	"reflect"
 	"strings"
 
-	gproto "github.com/golang/protobuf/proto" //nolint:staticcheck,typecheck
-	"github.com/golang/protobuf/ptypes/empty"
-	grpc_net_conn "github.com/mitchellh/go-grpc-net-conn"
-
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/eth/tracers"
-	"github.com/ethereum/go-ethereum/eth/tracers/logger"
 	"github.com/ethereum/go-ethereum/internal/cli/server/pprof"
 	"github.com/ethereum/go-ethereum/internal/cli/server/proto"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/enode"
+	gproto "github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes/empty"
+	grpc_net_conn "github.com/mitchellh/go-grpc-net-conn"
 )
 
-const chunkSize = 1024 * 1024 * 1024
+func (s *Server) Pprof(req *proto.PprofRequest, stream proto.Bor_PprofServer) error {
+	var payload []byte
+	var headers map[string]string
+	var err error
 
-func sendStreamDebugFile(stream proto.Bor_DebugPprofServer, headers map[string]string, data []byte) error {
+	ctx := context.Background()
+	switch req.Type {
+	case proto.PprofRequest_CPU:
+		payload, headers, err = pprof.CPUProfile(ctx, int(req.Seconds))
+	case proto.PprofRequest_TRACE:
+		payload, headers, err = pprof.Trace(ctx, int(req.Seconds))
+	case proto.PprofRequest_LOOKUP:
+		payload, headers, err = pprof.Profile(req.Profile, 0, 0)
+	}
+	if err != nil {
+		return err
+	}
+
 	// open the stream and send the headers
-	err := stream.Send(&proto.DebugFileResponse{
-		Event: &proto.DebugFileResponse_Open_{
-			Open: &proto.DebugFileResponse_Open{
+	err = stream.Send(&proto.PprofResponse{
+		Event: &proto.PprofResponse_Open_{
+			Open: &proto.PprofResponse_Open{
 				Headers: headers,
+				Size:    int64(len(payload)),
 			},
 		},
 	})
@@ -38,57 +50,24 @@ func sendStreamDebugFile(stream proto.Bor_DebugPprofServer, headers map[string]s
 	}
 
 	// Wrap our conn around the response.
-	encoder := grpc_net_conn.SimpleEncoder(func(msg gproto.Message) *[]byte {
-		return &msg.(*proto.DebugFileResponse_Input).Data
-	})
 	conn := &grpc_net_conn.Conn{
 		Stream:  stream,
-		Request: &proto.DebugFileResponse_Input{},
-		Encode:  grpc_net_conn.ChunkedEncoder(encoder, chunkSize),
+		Request: &proto.PprofResponse_Input{},
+		Encode: grpc_net_conn.SimpleEncoder(func(msg gproto.Message) *[]byte {
+			return &msg.(*proto.PprofResponse_Input).Data
+		}),
 	}
-
-	if _, err := conn.Write(data); err != nil {
+	if _, err := conn.Write(payload); err != nil {
 		return err
 	}
 
 	// send the eof
-	err = stream.Send(&proto.DebugFileResponse{
-		Event: &proto.DebugFileResponse_Eof{},
+	err = stream.Send(&proto.PprofResponse{
+		Event: &proto.PprofResponse_Eof{},
 	})
 	if err != nil {
 		return err
 	}
-
-	return nil
-}
-
-func (s *Server) DebugPprof(req *proto.DebugPprofRequest, stream proto.Bor_DebugPprofServer) error {
-	var (
-		payload []byte
-		headers map[string]string
-		err     error
-	)
-
-	ctx := context.Background()
-
-	switch req.Type {
-	case proto.DebugPprofRequest_CPU:
-		payload, headers, err = pprof.CPUProfile(ctx, int(req.Seconds))
-	case proto.DebugPprofRequest_TRACE:
-		payload, headers, err = pprof.Trace(ctx, int(req.Seconds))
-	case proto.DebugPprofRequest_LOOKUP:
-		payload, headers, err = pprof.Profile(req.Profile, 0, 0)
-	}
-
-	if err != nil {
-		return err
-	}
-
-	// send the file on a grpc stream
-	if err := sendStreamDebugFile(stream, headers, payload); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -188,34 +167,6 @@ func headerToProtoHeader(h *types.Header) *proto.Header {
 		Hash:   h.Hash().String(),
 		Number: h.Number.Uint64(),
 	}
-}
-
-func (s *Server) DebugBlock(req *proto.DebugBlockRequest, stream proto.Bor_DebugBlockServer) error {
-	traceReq := &tracers.TraceBlockRequest{
-		Number: req.Number,
-		Config: &tracers.TraceConfig{
-			Config: &logger.Config{
-				EnableMemory: true,
-			},
-		},
-	}
-
-	res, err := s.tracerAPI.TraceBorBlock(traceReq)
-	if err != nil {
-		return err
-	}
-
-	// this is memory heavy
-	data, err := json.Marshal(res)
-	if err != nil {
-		return err
-	}
-
-	if err := sendStreamDebugFile(stream, map[string]string{}, data); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 var bigIntT = reflect.TypeOf(new(big.Int)).Kind()

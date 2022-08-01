@@ -1,10 +1,13 @@
+
 # Debug
 
 The ```bor debug``` command takes a debug dump of the running client.
 
-- [```bor debug pprof```](./debug_pprof.md): Dumps bor pprof traces.
+## Options
 
-- [```bor debug block <number>```](./debug_block.md): Dumps bor block traces.
+- ```seconds```: Number of seconds to trace cpu and traces.
+
+- ```output```: Output directory for the data dump.
 
 ## Examples
 
@@ -12,8 +15,8 @@ By default it creates a tar.gz file with the output:
 
 ```
 $ bor debug
-Starting debugger...
-
+Starting debugger...                                                                                 
+                                                                                                     
 Created debug archive: bor-debug-2021-10-26-073819Z.tar.gz
 ```
 

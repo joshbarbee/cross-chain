@@ -1,32 +1,23 @@
-# Bor command line interface
+
+# Command line interface
 
 ## Commands
 
+- [```server```](./server.md)
+
+- [```debug```](./debug.md)
+
 - [```account```](./account.md)
-
-- [```account import```](./account_import.md)
-
-- [```account list```](./account_list.md)
 
 - [```account new```](./account_new.md)
 
-- [```attach```](./attach.md)
+- [```account list```](./account_list.md)
 
-- [```bootnode```](./bootnode.md)
+- [```account import```](./account_import.md)
 
 - [```chain```](./chain.md)
 
 - [```chain sethead```](./chain_sethead.md)
-
-- [```chain watch```](./chain_watch.md)
-
-- [```debug```](./debug.md)
-
-- [```debug block```](./debug_block.md)
-
-- [```debug pprof```](./debug_pprof.md)
-
-- [```fingerprint```](./fingerprint.md)
 
 - [```peers```](./peers.md)
 
@@ -38,8 +29,8 @@
 
 - [```peers status```](./peers_status.md)
 
-- [```server```](./server.md)
-
 - [```status```](./status.md)
+
+- [```chain watch```](./chain_watch.md)
 
 - [```version```](./version.md)

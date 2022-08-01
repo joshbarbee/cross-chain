@@ -244,7 +244,6 @@ func TestUniformSampleIncludesTail(t *testing.T) {
 }
 
 func TestUniformSampleSnapshot(t *testing.T) {
-	rand.Seed(1)
 	s := NewUniformSample(100)
 	for i := 1; i <= 10000; i++ {
 		s.Update(int64(i))
@@ -340,9 +339,6 @@ func TestUniformSampleConcurrentUpdateCount(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping in short mode")
 	}
-
-	rand.Seed(1)
-
 	s := NewUniformSample(100)
 	for i := 0; i < 100; i++ {
 		s.Update(int64(i))

@@ -1,0 +1,28 @@
+INFO [07-31|11:50:42.297] Maximum peer count                       total=50
+INFO [07-31|11:50:42.298] Smartcard socket not found, disabling    err="stat /run/pcscd/pcscd.comm: no such file or directory"
+INFO [07-31|11:50:42.303] Genesis file is a known preset           name="Mainnet-109331 with pruned MPT"
+INFO [07-31|11:50:42.338] Genesis is already written               name=main                             id=250 genesis=0x4a53c5445584b3bfc20dbfb2ec18ae20037c716f3ba2d9e1da768a9deca17cb4
+INFO [07-31|11:50:42.340] Loaded local transaction journal         transactions=0 dropped=0
+INFO [07-31|11:50:42.340] Regenerated local transaction journal    transactions=0 accounts=0
+INFO [07-31|11:50:42.340] Starting peer-to-peer node               instance=go-opera/v1.1.1-rc.1-627ef053-1659075149/linux-amd64/go1.18.3
+INFO [07-31|11:50:42.360] Mapped network port                      proto=tcp extport=5050 intport=5050 interface=NAT-PMP(192.168.1.1)
+INFO [07-31|11:50:42.407] New local node record                    seq=6 id=f1040308cc632f1e ip=71.191.49.88 udp=5050 tcp=5050
+INFO [07-31|11:50:42.408] Started P2P networking                   self=enode://4292837d09ce3843d1b9e71bccdf677c706ca27d28db8ea2dec59d1c611d01aacd8433935d227aaff0955d3ef5e790f358611e9f1f65eeddb42b77f14bfc5eb7@71.191.49.88:5050
+INFO [07-31|11:50:42.408] IPC endpoint opened                      url=/home/josh/.opera/opera.ipc
+INFO [07-31|11:50:42.408] IPC endpoint closed                      url=/home/josh/.opera/opera.ipc
+INFO [07-31|11:50:42.412] Mapped network port                      proto=udp extport=5050 intport=5050 interface=NAT-PMP(192.168.1.1)
+Fatal: Error starting protocol stack: fullsync isn't possible because state root is missing
+INFO [07-31|11:51:24.966] Maximum peer count                       total=50
+INFO [07-31|11:51:24.966] Smartcard socket not found, disabling    err="stat /run/pcscd/pcscd.comm: no such file or directory"
+INFO [07-31|11:51:24.966] Genesis file is a known preset           name="Mainnet-109331 with pruned MPT"
+INFO [07-31|11:51:24.990] Applying genesis state 
+INFO [07-31|11:51:24.991] - Reading epochs 
+INFO [07-31|11:52:11.743] - Reading blocks 
+INFO [07-31|11:53:15.796] - Reading blocks                         progress=0.25% elapsed=1m4.053s eta=8h31m55.221s
+INFO [07-31|11:54:18.819] - Reading blocks                         progress=0.47% elapsed=2m7.076s eta=8h53m22.303s
+INFO [07-31|11:55:22.419] - Reading blocks                         progress=0.65% elapsed=3m10.675s eta=9h43m50.171s
+INFO [07-31|11:56:31.449] - Reading blocks                         progress=0.82% elapsed=4m19.706s eta=10h25m25.896s
+INFO [07-31|11:57:33.681] - Reading blocks                         progress=0.97% elapsed=5m21.938s eta=10h55m2.272s
+INFO [07-31|11:58:40.347] - Reading blocks                         progress=1.12% elapsed=6m28.603s eta=11h24m13.505s
+INFO [07-31|11:59:43.960] - Reading blocks                         progress=1.27% elapsed=7m32.217s eta=11h41m29.792s
+INFO [07-31|12:00:48.380] - Reading blocks                         progress=1.42% elapsed=8m36.637s eta=11h55m58.865s

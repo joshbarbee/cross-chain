@@ -920,7 +920,7 @@ func TestLightVsFastVsFullChainHeads(t *testing.T) {
 	archiveDb, delfn := makeDb()
 	defer delfn()
 
-	archiveCaching := *DefaultCacheConfig
+	archiveCaching := *defaultCacheConfig
 	archiveCaching.TrieDirtyDisabled = true
 
 	archive, _ := NewBlockChain(archiveDb, &archiveCaching, gspec.Config, ethash.NewFaker(), vm.Config{}, nil, nil)

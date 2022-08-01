@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -11,17 +10,6 @@ import (
 
 type AccountImportCommand struct {
 	*Meta
-}
-
-// MarkDown implements cli.MarkDown interface
-func (a *AccountImportCommand) MarkDown() string {
-	items := []string{
-		"# Account import",
-		"The ```account import``` command imports an account in Json format to the Bor data directory.",
-		a.Flags().MarkDown(),
-	}
-
-	return strings.Join(items, "\n\n")
 }
 
 // Help implements the cli.Command interface
@@ -59,9 +47,7 @@ func (a *AccountImportCommand) Run(args []string) int {
 		a.UI.Error("Expected one argument")
 		return 1
 	}
-
 	key, err := crypto.LoadECDSA(args[0])
-
 	if err != nil {
 		a.UI.Error(fmt.Sprintf("Failed to load the private key '%s': %v", args[0], err))
 		return 1
@@ -83,8 +69,6 @@ func (a *AccountImportCommand) Run(args []string) int {
 	if err != nil {
 		utils.Fatalf("Could not create the account: %v", err)
 	}
-
 	a.UI.Output(fmt.Sprintf("Account created: %s", acct.Address.String()))
-
 	return 0
 }

@@ -15,8 +15,6 @@
 */**/*dapps*
 build/_vendor/pkg
 
-cover.out
-
 #*
 .#*
 *#
@@ -39,8 +37,6 @@ profile.cov
 
 # VS Code
 .vscode
-
-/data
 
 # dashboard
 /dashboard/assets/flow-typed

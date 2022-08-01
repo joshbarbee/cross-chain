@@ -1,7 +1,4 @@
-# Peers add
+
+# Peers list
 
 The ```peers list``` command lists the connected peers.
-
-## Options
-
-- ```address```: Address of the grpc endpoint

@@ -225,16 +225,15 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 	if isPrecompile {
 		ret, gas, err = RunPrecompiledContract(p, input, gas)
 	} else {
-		// Initialise a new contract and set the code that is to be used by the EVM.
-		// The contract is a scoped environment for this execution context only.
-		code := evm.StateDB.GetCode(addr)
-
 		traceIndexCopy := mgologger.TraceIndex
 		if !evm.Prefetch {
 			mgologger.TraceIndex++
 			mgologger.CallStack[evm.depth] = uint(traceIndexCopy)
 		}
 
+		// Initialise a new contract and set the code that is to be used by the EVM.
+		// The contract is a scoped environment for this execution context only.
+		code := evm.StateDB.GetCode(addr)
 		if len(code) == 0 {
 			ret, err = nil, nil // gas is unchanged
 		} else {
