@@ -13,7 +13,7 @@ import (
 )
 
 type Collection struct {
-	Block        string
+	Block        int
 	Tx           string
 	From         string
 	To           string
@@ -179,7 +179,7 @@ func WriteEntry(block big.Int, tx common.Hash, from string, to string, value big
 	funcTraceStr := strings.TrimSuffix(string(bytes.Trim(Functrace.Bytes(), "\x00")), "\n")
 
 	trace := Collection{
-		Block:        block.String(),
+		Block:        int(block.Int64()),
 		Tx:           tx.String(),
 		From:         from,
 		To:           to,
