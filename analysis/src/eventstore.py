@@ -1,5 +1,6 @@
 from contract import Event
 
+
 class EventStore():
     """
         Manages references to the same event, so that we
@@ -7,7 +8,7 @@ class EventStore():
     """
 
     def __init__(self) -> None:
-        self.events : dict[str, list[str,Event]] = {}
+        self.events: dict[str, list[str, Event]] = {}
 
-    def get_event(self, event : Eve) -> Event | None:
+    def get_event(self, event: Eve) -> Event | None:
         return self.events

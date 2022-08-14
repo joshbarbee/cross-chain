@@ -9,6 +9,7 @@ from argparse import RawTextHelpFormatter
 from mgowrapper import MongoFetcher
 from transaction import Transaction
 from contractstore import ContractStore
+from bridge import Bridges
 
 parser = argparse.ArgumentParser(description=("Contract parser for XScan apis (etherscan, bscscan, etc)"
                                               "\n*If an API key is not provided, then the .env file will "
@@ -22,30 +23,35 @@ parser.add_argument('-bk', '--bscKey', type=str,
                     help="API Key to use for BSC Scan.")
 parser.add_argument('-ek', '--ethKey', type=str,
                     help="API Key to use for Eth Scan")
-parser.add_argument('-c', "--chain", type=str,
-                    help="Chain to run analysis on \n Supported options:\n-eth\n-bsc\n", required=True)
+parser.add_argument('-c', "--chains", nargs='+',
+                    help="Chains sto run analysis on \n Supported options:\n-eth\n-bsc\n", required=True)
 
 args = parser.parse_args()
 
+bscStore = None
+ethStore = None
+polygonStore = None
 
-if args.chain == "bsc":
-    fetch = MongoFetcher("bsc")
+bscFetcher = MongoFetcher("ethereum", "bsc")
+ethFetcher = MongoFetcher("ethereum", "eth")
+polygonFetcher = MongoFetcher("ethereum", "poly")
+
+if "bsc" in args.chains:
     bscApiKey = bscApiKey = os.getenv(
         "bscApiKey") if args.bscKey == None else args.bscKey
-    store = ContractStore(BSCContractScanner(bscApiKey))
+    bscStore = ContractStore(BSCContractScanner(bscApiKey))
 
-    if args.transaction != None:
-        tx = Transaction(args.transaction, fetch, store)
-        print(tx.interacted_functions())
-        print(tx)
-
-if args.chain == "eth":
-    fetch = MongoFetcher("eth")
+if "eth" in args.chains:
     ethApiKey = ethApiKey = os.getenv(
         "ethApiKey") if args.ethKey == None else args.ethKey
-    store = ContractStore(EthContractScanner(ethApiKey))
+    ethStore = ContractStore(EthContractScanner(ethApiKey))
 
-    if args.transaction != None:
-        tx = Transaction(args.transaction, fetch, store)
-        print(tx.interacted_functions())
-        print(tx)
+if "poly" in args.chains:
+    polyApiKey = polyApiKey = os.getenv(
+        "polyApiKey") if args.poliKey == None else args.poliKey
+    polygonStore = ContractStore(PolyContractScanner(polyApiKey))
+
+bridges = Bridges(ethStore, bscStore, polygonStore,
+                  "./src/bridges2.json", bscFetcher, ethFetcher, polygonFetcher)
+bridges.bridges[0].load_outbound_transactions(1, 0, 10000000, 100)
+print(bridges.bridges[0].outbound_tx)

@@ -1,0 +1,204 @@
+{
+	"bsc": [
+        {
+            "name": "CelerOld",
+            "type": "sender",
+            "destChains": [
+                "fantom",
+                "eth",
+                "polygon"
+            ],
+            "address": "0x841ce48F9446C8E281D3F1444cB859b4A6D0738C"
+	    },
+        {
+            "name": "Celer",
+            "type": "sender",
+            "destChains": [
+                "fantom",
+                "eth",
+                "polygon"
+            ],
+            "address": "0xdd90E5E87A2081Dcf0391920868eBc2FFB81a1aF"
+        },
+        {
+            "name": "Synapse",
+            "type": "sender",
+            "destChains": [
+                "fantom",
+                "eth",
+                "polygon"
+            ],
+            "address": "0x749F37Df06A99D6A8E065dd065f8cF947ca23697"
+        },
+        {
+            "name": "MultichainNew",
+            "type": "sender",
+            "destChains": [
+                "fantom",
+                "eth",
+                "polygon"
+            ],
+            "address": "0x92C079d3155C2722dBf7E65017a5baf9CD15561c"
+        },
+        {
+            "name": "MultichainOld",
+            "type": "sender",
+            "destChains": [
+                "fantom",
+                "eth",
+                "polygon"
+            ],
+            "address": "0xd1C5966f9F5Ee6881Ff6b261BBeDa45972B1B5f3"
+        },
+        {
+            "name": "AnyswapFTM",
+            "type": "sender",
+            "destChains": [
+                "fantom"
+            ],
+            "address": "0x4b3B4120d4D7975455d8C2894228789c91a247F8"
+        },
+        {
+            "name": "Ren",
+            "type":"sender",
+            "destChains": [
+                "fantom",
+                "bsc",
+                "polygon"
+            ],
+            "address": "0xAC23817f7E9Ec7EB6B7889BDd2b50e04a44470c5"
+        }
+    ],
+    "eth": [
+        {
+            "name": "Celer",
+            "type": "sender",
+            "destChains": [
+                "fantom",
+                "bsc",
+                "polygon"
+            ],
+            "address": "0x5427FEFA711Eff984124bFBB1AB6fbf5E3DA1820"
+        },
+        {
+            "name": "Synapse",
+            "type": "sender",
+            "destChains": [
+                "fantom",
+                "bsc",
+                "polygon"
+            ],
+            "address": "0x2796317b0fF8538F253012862c06787Adfb8cEb6"
+        },
+        {
+            "name": "Multichain",
+            "type": "sender",
+            "destChains": [
+                "fantom",
+                "bsc",
+                "polygon"
+            ],
+            "address": "0x2796317b0fF8538F253012862c06787Adfb8cEb6"
+        },
+        {
+            "name": "Polygon",
+            "type": "sender",
+            "destChains": [
+                "polygon"
+            ],
+            "address": "0xA0c68C638235ee32657e8f720a23ceC1bFc77C77"
+        },
+        {
+            "name": "MultichainFNT",
+            "type":"receiver",
+            "address": "0xC564EE9f21Ed8A2d8E7e76c085740d5e4c5FaFbE"
+        },
+        {
+            "name": "MultichainBNB",
+            "type":"receiver",
+            "address": "0x13B432914A996b0A48695dF9B2d701edA45FF264"
+        },
+        {
+            "name": "MultichainRouter",
+            "type":"sender",
+            "destChains": [
+                "fantom",
+                "bsc",
+                "polygon"
+            ],
+            "address": "0xBa8Da9dcF11B50B03fd5284f164Ef5cdEF910705"
+        },
+        {
+            "name": "Ren",
+            "type":"sender",
+            "destChains": [
+                "fantom",
+                "bsc"
+            ],
+            "address": "0x32666B64e9fD0F44916E1378Efb2CFa3B3B96e80"
+        }
+    ],
+    "polygon": [
+        {
+            "name": "Multichain",
+            "type":"sender",
+            "destChains": [
+                "fantom",
+                "bsc",
+                "eth"
+            ],
+            "address": "0x4f3Aff3A747fCADe12598081e80c6605A8be192F"
+        },
+        {
+            "name": "Synapse",
+            "type":"sender",
+            "destChains": [
+                "fantom",
+                "bsc",
+                "eth"
+            ],
+            "address": "0x4f3Aff3A747fCADe12598081e80c6605A8be192F"
+        }
+    ],
+    "fantom": [
+        {
+            "name": "Multichain",
+            "type":"sender",
+            "destChains": [
+                "polygon",
+                "bsc",
+                "eth"
+            ],
+            "address": "0x4f3Aff3A747fCADe12598081e80c6605A8be192F"
+        },
+        {
+            "name": "Synapse",
+            "type":"sender",
+            "destChains": [
+                "polygon",
+                "bsc",
+                "eth"
+            ],
+            "address": "0x4f3Aff3A747fCADe12598081e80c6605A8be192F"
+        },
+        {
+            "name": "Ren",
+            "type":"sender",
+            "destChains": [
+                "eth",
+                "bsc"
+            ],
+            "address": "0x32666B64e9fD0F44916E1378Efb2CFa3B3B96e80"
+        },
+        {
+            "name": "CelerBridge",
+            "type": "sender",
+            "destChains": [
+                "eth",
+                "bsc",
+                "polygon"
+            ],
+            "address": "0x374B8a9f3eC5eB2D97ECA84Ea27aCa45aa1C57EF"
+        }
+    ]
+}

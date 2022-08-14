@@ -5,7 +5,7 @@
 """
 
 import requests
-from errors import ContractNotFound, InvalidRequest
+from errors import ContractNotFound, InvalidRequest, BlockNotFound
 from contract import Contract
 import pprint
 import json
@@ -44,7 +44,7 @@ class BaseContractScanner():
         """
         try:
             req = requests.get(
-                f"{self.base_url}&address={address}&apiKey={self.api_key}")
+                f"{self.base_url}?module=contract&action=getsourcecode&address={address}&apiKey={self.api_key}")
 
             if req.status_code != 200:
                 raise InvalidRequest(
@@ -52,7 +52,7 @@ class BaseContractScanner():
 
             json = req.json()
             if (('status' in json and json['status'] == '0')
-                or ('status' in json and json['status'] == '1' and json['result'][0]['SourceCode'] == "")):
+                    or ('status' in json and json['status'] == '1' and json['result'][0]['SourceCode'] == "")):
                 raise ContractNotFound(
                     "The specified contract was not found for this endpoint")
 
@@ -116,6 +116,50 @@ class BaseContractScanner():
             else:
                 pprint.pprint(contract.abi)
 
+    def get_block_timestamp(self, block: int) -> int:
+        """
+            Returns the Unix timestamp for when a block was minted, or raises an error
+        """
+        try:
+            req = requests.get(
+                f"{self.base_url}?module=block&action=getblockreward&blockno={block}&apiKey={self.api_key}")
+
+            if req.status_code != 200:
+                raise InvalidRequest(
+                    "The passed paremeters were not valid for this endpoint")
+
+            json = req.json()
+            if (('status' in json and json['status'] == '0')
+                    or ('status' in json and json['status'] == '1' and json['timeStamp'] == "")):
+                raise ContractNotFound(
+                    "The specified contract was not found for this endpoint")
+
+            return int(json['timeStamp'])
+        except BlockNotFound:
+            return None
+
+    def get_closest_block(self, timestamp: int) -> int:
+        """
+            Returns the nearest block that was minted on the chain to the passed timestamp
+        """
+        try:
+            req = requests.get(
+                f"{self.base_url}?module=block&action=getblocknobytime&closest=after&timestamp={timestamp}&apiKey={self.api_key}")
+
+            if req.status_code != 200:
+                raise InvalidRequest(
+                    "The passed paremeters were not valid for this endpoint")
+
+            json = req.json()
+            if (('status' in json and json['status'] == '0')
+                    or (json['message'] != 'OK')):
+                raise BlockNotFound(
+                    "The block was not valid for this endpoint")
+
+            return int(json['result'])
+        except BlockNotFound():
+            return None
+
 
 class BSCContractScanner(BaseContractScanner):
     """
@@ -124,7 +168,7 @@ class BSCContractScanner(BaseContractScanner):
 
     def __init__(self, api_key: str) -> None:
         super().__init__(api_key,
-                         "https://api.bscscan.com/api?module=contract&action=getsourcecode&")
+                         "https://api.bscscan.com/api")
 
 
 class EthContractScanner(BaseContractScanner):
@@ -134,4 +178,14 @@ class EthContractScanner(BaseContractScanner):
 
     def __init__(self, api_key: str) -> None:
         super().__init__(api_key,
-                         "https://api.etherscan.io/api?module=contract&action=getsourcecode&")
+                         "https://api.etherscan.io/api")
+
+
+class PolyContractScanner(BaseContractScanner):
+    """
+        Wrapper for the PolyScan api
+    """
+
+    def __init__(self, api_key: str) -> None:
+        super().__init__(api_key,
+                         "https://api.polygonscan.io/api")

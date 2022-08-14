@@ -5,6 +5,7 @@
 
 import json
 from Crypto.Hash import keccak
+from errors import FunctionNotFound
 
 
 class Event():
@@ -140,6 +141,19 @@ class Function():
 
         return self.k.hexdigest()[0:8]
 
+    def __eq__(self, o) -> bool:
+        if isinstance(o, Function):
+            if o.signature == self.signature:
+                return True
+        elif isinstance(o, str):
+            if o == self.name:
+                return True
+
+        return False
+
+    def __hash__(self) -> int:
+        return hash(self.signature)
+
 
 class Contract():
     """
@@ -157,7 +171,7 @@ class Contract():
         self.events = self.__load_events()
         self.functions = self.__load_functions()
 
-    def __load_events(self) -> list:
+    def __load_events(self) -> [Event]:
         """
             Loads all events from the abi of the contract into the self.events property
         """
@@ -170,7 +184,7 @@ class Contract():
 
         return events
 
-    def __load_functions(self) -> list:
+    def __load_functions(self) -> [Function]:
         """
             Returns all functions from the abi of the contract
         """
@@ -204,14 +218,20 @@ class Contract():
 
     def __eq__(self, o) -> bool:
         """
-            Again, taking advantage of address being unique. We avoid any complications with deep nested equalities from the events
-            and functions this way
-        """ 
+            Again, taking advantage of address being unique. We avoid any complications with deep nested equalities from the events and functions this way
+        """
         return isinstance(o, type(self)) and o.address == self.address
 
-    def get_func_signatures(self) -> dict[str,[str]]: 
+    def get_func_signatures(self) -> dict[str, [str]]:
         """ 
             Returns a list of all the function signatures for the contract
         """
 
-        return {self.address :[i.signature for i in self.functions]}
+        return {self.address: [i.signature for i in self.functions]}
+
+    def get_function(self, name: str) -> Function:
+        for f in self.functions:
+            if f.name == name:
+                return f
+
+        raise FunctionNotFound
