@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/globalsign/mgo"
 )
 
@@ -37,9 +38,6 @@ var (
 	Eventtrace    *bytes.Buffer
 	Transfertrace *bytes.Buffer
 
-	CurrentDepth int
-	MaxDepth     int
-
 	TransferSig       common.Hash
 	ApprovalSig       common.Hash
 	ApprovalForAllSig common.Hash
@@ -67,9 +65,11 @@ func InitLogger() {
 		TraceAddr[i] = 0
 	}
 
-	CurrentDepth = 0
 	TraceIndex = 0
-	MaxDepth = 0
+
+	TransferSig = crypto.Keccak256Hash([]byte("Transfer(address,address,uint256)"))
+	ApprovalSig = crypto.Keccak256Hash([]byte("Approval(address,address,uint256)"))
+	ApprovalForAllSig = crypto.Keccak256Hash([]byte("Approval(address,address,bool)"))
 
 	session, err := mgo.DialWithTimeout(url, 0)
 
@@ -79,7 +79,7 @@ func InitLogger() {
 
 	Logger = session
 
-	Db = session.DB("ethereum")
+	Db = session.DB("cross-chain2")
 }
 
 func InitTrace() {
@@ -87,14 +87,10 @@ func InitTrace() {
 	Eventtrace.Reset()
 	Transfertrace.Reset()
 
-	for i := 0; i < MaxDepth; i++ {
+	for i := 0; i < 1025; i++ {
 		CallStack[i] = 0
 		TraceAddr[i] = 0
 	}
-
-	CurrentDepth = 0
-	TraceIndex = 0
-	MaxDepth = 0
 }
 
 func AddFuncLog(index int, ct string, d int, from string, to string, value string, g uint64, input string, output string) {
@@ -105,21 +101,21 @@ func AddFuncLog(index int, ct string, d int, from string, to string, value strin
 	}
 }
 
-func AddEventLog(addr common.Address, topics []common.Hash, data []byte, t string, function string) {
-	Eventtrace.WriteString(fmt.Sprintf("%s,%s,0x%s,%s,%s\n", addr, topics, hex.EncodeToString(data), t, function))
+func AddEventLog(addr common.Address, topics []common.Hash, data []byte, _type string, function string) {
+	Eventtrace.WriteString(fmt.Sprintf("%s,%s,0x%s,%s,%s,%d\n", addr, topics, hex.EncodeToString(data), _type, function, TraceIndex))
 }
 
 // This is invoked in 1 of 3 contexts, 2 of which occure in AddEventLog:
 // 1. An ERC20 event
 // 2. An ERC721 event
 // 3. Any ethereum transfer event. Hooks .transfer()
-func AddTransferLog(from string, to string, tokenAddr string, value string, depth int, Type string) {
+func AddTransferLog(from string, to string, tokenAddr string, value string, depth int, _type string) {
 	var output string
 
 	if depth == 0 {
-		output = fmt.Sprintf("%s,%s,%s,0x%s,%d,%d,[]\n", from, to, tokenAddr, value, depth, TraceIndex)
+		output = fmt.Sprintf("%s,%s,%s,0x%s,%d,%d,[],%s\n", from, to, tokenAddr, value, depth, TraceIndex, _type)
 	} else {
-		output = fmt.Sprintf("%s,%s,%s,0x%s,%d,%+v,%+v\n", from, to, tokenAddr, value, depth, TraceIndex, CallStack[1:depth+1])
+		output = fmt.Sprintf("%s,%s,%s,0x%s,%d,%+v,%+v,%s\n", from, to, tokenAddr, value, depth, TraceIndex, CallStack[1:depth+1], _type)
 	}
 
 	Transfertrace.WriteString(output)

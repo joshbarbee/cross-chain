@@ -27,22 +27,16 @@ type Collection struct {
 }
 
 var (
-	Logger               *mgo.Session
-	Db                   *mgo.Database
+	Logger *mgo.Session
+	Db     *mgo.Database
+
 	BaseFunctracestr     string
 	BaseEventtracestr    string
 	BaseTransfertracestr string
-	BaseERC721str        string
-	BaseERC20str         string
 
-	Functrace   *bytes.Buffer
-	DepthBuffer [1025]*bytes.Buffer
-
+	Functrace     *bytes.Buffer
 	Eventtrace    *bytes.Buffer
 	Transfertrace *bytes.Buffer
-
-	CurrentDepth int
-	MaxDepth     int
 
 	TransferSig       common.Hash
 	ApprovalSig       common.Hash
@@ -59,24 +53,20 @@ func InitLogger() {
 
 	// initialize log for current tx
 	BaseFunctracestr = "index,calltype,depth,from,to,val,gas,input,output,callstack,traceaddr \n"
-	BaseEventtracestr = "address,topics,data,type,function\n"
-	BaseTransfertracestr = "from,to,tokenAddr,value,calldepth,callnum,traceindex,type\n"
+	BaseEventtracestr = "address,topics,data\n"
+	BaseTransfertracestr = "from,to,tokenAddr,value,calldepth,callnum,traceindex\n"
 
-	Functrace = bytes.NewBuffer(make([]byte, 2000000))
-	Eventtrace = bytes.NewBuffer(make([]byte, 2000000))
-	Transfertrace = bytes.NewBuffer(make([]byte, 200000))
+	Functrace = bytes.NewBuffer(make([]byte, 4000000))
+	Eventtrace = bytes.NewBuffer(make([]byte, 1000000))
+	Transfertrace = bytes.NewBuffer(make([]byte, 1000000))
 
 	for i := 0; i < 1025; i++ {
-		DepthBuffer[i] = bytes.NewBuffer(make([]byte, 20000))
 		CallStack[i] = 0
 		TraceAddr[i] = 0
 	}
 
-	CurrentDepth = 0
 	TraceIndex = 0
-	MaxDepth = 0
 
-	// initialize event function signatures for token tracing
 	TransferSig = crypto.Keccak256Hash([]byte("Transfer(address,address,uint256)"))
 	ApprovalSig = crypto.Keccak256Hash([]byte("Approval(address,address,uint256)"))
 	ApprovalForAllSig = crypto.Keccak256Hash([]byte("Approval(address,address,bool)"))
@@ -89,7 +79,7 @@ func InitLogger() {
 
 	Logger = session
 
-	Db = session.DB("ethereum")
+	Db = session.DB("cross-chain2")
 }
 
 func InitTrace() {
@@ -97,63 +87,35 @@ func InitTrace() {
 	Eventtrace.Reset()
 	Transfertrace.Reset()
 
-	for i := 0; i < MaxDepth; i++ {
-		DepthBuffer[i].Reset()
+	for i := 0; i < 1025; i++ {
 		CallStack[i] = 0
 		TraceAddr[i] = 0
 	}
-
-	CurrentDepth = 0
-	TraceIndex = 0
-	MaxDepth = 0
 }
 
 func AddFuncLog(index int, ct string, d int, from string, to string, value string, g uint64, input string, output string) {
 	if d == 0 {
-		DepthBuffer[d].WriteString(fmt.Sprintf("%d,%s,%d,%s,%s,%s,%d,0x%s,0x%s,[],[]\n", index, ct, d, from, to, value, g, input, output))
+		Functrace.WriteString(fmt.Sprintf("%d,%s,%d,%s,%s,%s,%d,0x%s,0x%s,[],[]\n", index, ct, d, from, to, value, g, input, output))
 	} else {
-		DepthBuffer[d].WriteString(fmt.Sprintf("%d,%s,%d,%s,%s,%s,%d,0x%s,0x%s,%+v,%+v\n", index, ct, d, from, to, value, g, input, output, CallStack[1:d+1], TraceAddr[1:d+1]))
+		Functrace.WriteString(fmt.Sprintf("%d,%s,%d,%s,%s,%s,%d,0x%s,0x%s,%+v,%+v\n", index, ct, d, from, to, value, g, input, output, CallStack[1:d+1], TraceAddr[1:d+1]))
 	}
-
-	TraceAddr[d]++
-
-	for d < CurrentDepth {
-		DepthBuffer[CurrentDepth-1].WriteString(DepthBuffer[CurrentDepth].String())
-		DepthBuffer[CurrentDepth].Reset()
-
-		CurrentDepth--
-	}
-
-	if d == 0 {
-		for CurrentDepth > d {
-			DepthBuffer[CurrentDepth-1].WriteString(DepthBuffer[CurrentDepth].String())
-			DepthBuffer[CurrentDepth].Reset()
-
-			CurrentDepth--
-		}
-
-		Functrace.WriteString(DepthBuffer[0].String())
-		DepthBuffer[0].Reset()
-	}
-
-	CurrentDepth = d
 }
 
-func AddEventLog(addr common.Address, topics []common.Hash, data []byte, logType string, function string) {
-	Eventtrace.WriteString(fmt.Sprintf("%s,%s,0x%s,%s,%s\n", addr, topics, hex.EncodeToString(data), logType, function))
+func AddEventLog(addr common.Address, topics []common.Hash, data []byte, _type string, function string) {
+	Eventtrace.WriteString(fmt.Sprintf("%s,%s,0x%s,%s,%s,%d\n", addr, topics, hex.EncodeToString(data), _type, function, TraceIndex))
 }
 
 // This is invoked in 1 of 3 contexts, 2 of which occure in AddEventLog:
 // 1. An ERC20 event
 // 2. An ERC721 event
 // 3. Any ethereum transfer event. Hooks .transfer()
-func AddTransferLog(from string, to string, tokenAddr string, value string, depth int, Type string) {
+func AddTransferLog(from string, to string, tokenAddr string, value string, depth int, _type string) {
 	var output string
 
 	if depth == 0 {
-		output = fmt.Sprintf("%s,%s,%s,0x%s,%d,%d,[],%s\n", from, to, tokenAddr, value, depth, TraceIndex, Type)
+		output = fmt.Sprintf("%s,%s,%s,0x%s,%d,%d,[],%s\n", from, to, tokenAddr, value, depth, TraceIndex, _type)
 	} else {
-		output = fmt.Sprintf("%s,%s,%s,0x%s,%d,%+v,%+v,%s\n", from, to, tokenAddr, value, depth, TraceIndex, CallStack[1:depth+1], Type)
+		output = fmt.Sprintf("%s,%s,%s,0x%s,%d,%+v,%+v,%s\n", from, to, tokenAddr, value, depth, TraceIndex, CallStack[1:depth+1], _type)
 	}
 
 	Transfertrace.WriteString(output)

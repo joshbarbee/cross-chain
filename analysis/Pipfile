@@ -7,6 +7,7 @@ name = "pypi"
 requests = "*"
 pycryptodome = "*"
 pymongo = "*"
+pandas = "*"
 
 [dev-packages]
 pycodestyle = "*"
@@ -19,4 +20,4 @@ python_version = "3.10"
 
 [scripts]
 lint-fix = "autopep8 . --recursive --in-place --pep8-passes 2000 --verbose"
-dev = "python ./src/main.py --chains eth bsc"
+dev = "python ./v2/main.py --chains eth bsc"

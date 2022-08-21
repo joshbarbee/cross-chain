@@ -5,7 +5,7 @@
 
 import json
 from Crypto.Hash import keccak
-from errors import FunctionNotFound
+from errors import FunctionNotFound, EventNotFound
 
 
 class Event():
@@ -13,7 +13,7 @@ class Event():
         Class to contain information about a specific event
     """
 
-    def __init__(self, name: str, args: []) -> None:
+    def __init__(self, name: str, a: []) -> None:
         self.name = name
         self.args = args
 
@@ -235,3 +235,10 @@ class Contract():
                 return f
 
         raise FunctionNotFound
+
+    def get_event(self, name : str) -> Event:
+        for e in self.events:
+            if e.name == name:
+                return e
+
+        raise EventNotFound

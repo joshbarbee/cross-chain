@@ -30,3 +30,8 @@ class FunctionNotFound(Exception):
         Risen when a input / output function from the JSON file is not found in the 
         contract source code
     """
+
+class EventNotFound(Exception):
+    """
+        Risen when a contract does not contain the specified event
+    """

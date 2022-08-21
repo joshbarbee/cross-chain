@@ -53,5 +53,7 @@ if "poly" in args.chains:
 
 bridges = Bridges(ethStore, bscStore, polygonStore,
                   "./src/bridges2.json", bscFetcher, ethFetcher, polygonFetcher)
-bridges.bridges[0].load_outbound_transactions(1, 0, 10000000, 100)
-print(bridges.bridges[0].outbound_tx)
+
+bridges.bridges[0].load_transactions(0, 10000000, 100)
+
+

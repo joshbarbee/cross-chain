@@ -1,7 +1,41 @@
+from dataclasses import dataclass
 from mgowrapper import MongoFetcher
 from errors import MongoTxNotFound
-from contract import Contract, Function
+from contract import Contract, Function, Event
 from contractstore import ContractStore
+import ast
+
+@dataclass
+class Transfer():
+    """
+        A single transfer event, corresponding to the transferLogs index in the database
+    """
+    def __init__(self, _from : str, _to : str, token : str, amount : int, depth : int, _type : 'ERC20' | 'ERC721' | ''):
+        self._from = _from
+        self._to = _to
+        self.token - token
+        self.amount = amount
+        self.depth = depth
+        self.type = _type
+
+@dataclasss
+class TxEvent():
+    """
+        Represents a logged event from the EVM. 
+    """
+    def __init__(self, address : str, topics : [str], data :str):
+        self.address = address
+        self.topics = topics
+        self.data = data
+
+        self.type = self.__load_type()
+
+    def __load_type(self):
+        if 
+
+    def get_type(self):
+
+
 
 
 class Call():
@@ -57,11 +91,13 @@ class Transaction():
         self.gas_price: int = 0
         self.gas_used: int = 0
         self.block: int = 0
-        self.contracts: [Contract] = []
         self.store = store
 
         self.function_signatures: dict[str, [str]] = {}
 
+        self.contracts: [Contract] = []
+        self.transfers : [Transfer] = []
+        self.events : [TxEvent] = []
         self.calls: [Call] = []
 
         self.__load_tx(fetcher)
@@ -88,6 +124,7 @@ class Transaction():
         self.gas_used = int(data['gasused'])
         self.block = int(data['block'])
 
+        self.__load_transfer_logs(data['transferLogs'])
         self.__load_verified_functions(data['functrace'])
         self.__load_signatures()
 
@@ -130,6 +167,19 @@ class Transaction():
 
         for contract in self.contracts:
             self.function_signatures.update(contract.get_func_signatures())
+
+    def __load_events(self, logs : [str, str]) -> None:
+        for event in logs:
+            addr, topics_str, data, _ = event.split(',')
+            topics = ast.literal_eval(topics_str)
+            self.events.append(TxEvent(addr, topics, data))
+
+
+    def __load_transfer_logs(self, logs : [str,str]) -> None:
+        for transfer in logs.split("\n"):
+            _from, _to, token_addr, amount, depth, _  = transfer.split(",")
+            self.transfers.append(Transfer(_from, _to, token_addr, amount, depth))
+
 
     def interacted_functions(self) -> [str]:
         """
