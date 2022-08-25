@@ -1,5 +1,5 @@
 from contract import Contract
-from scanwrapper import EthContractScanner, BSCContractScanner, BaseContractScanner
+from scanwrapper import EthContractScanner, BSCContractScanner, PolyContractScanner
 
 
 class ContractStore():
@@ -11,11 +11,11 @@ class ContractStore():
         - scanner (The API scanner to use (BSCCOntractScanner, EthContractScanner, etc))
     """
 
-    def __init__(self, scanner: BSCContractScanner | EthContractScanner):
-        self.contracts: dict[string, Contract] = {}
+    def __init__(self, scanner: BSCContractScanner | EthContractScanner | PolyContractScanner):
+        self.contracts: dict[str, Contract] = {}
         self.scanner = scanner
 
-    def get_contract(self, address) -> Contract:
+    def get_contract(self, address : str) -> Contract:
         """
             Checks to see if the contract first exists locally, then checks the *Scan APIs to see if the contract can be loaded.
             If the contract is not loaded, none is returned
@@ -40,3 +40,4 @@ class ContractStore():
 
     def get_closest_block(self, timestamp: int) -> int:
         return self.scanner.get_closest_block(timestamp)
+

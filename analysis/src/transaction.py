@@ -1,41 +1,36 @@
 from dataclasses import dataclass
 from mgowrapper import MongoFetcher
 from errors import MongoTxNotFound
-from contract import Contract, Function, Event
+from contract import Contract
 from contractstore import ContractStore
 import ast
+
+from typing import List, Dict
 
 @dataclass
 class Transfer():
     """
         A single transfer event, corresponding to the transferLogs index in the database
     """
-    def __init__(self, _from : str, _to : str, token : str, amount : int, depth : int, _type : 'ERC20' | 'ERC721' | ''):
+    def __init__(self, _from : str, _to : str, token : str, amount : int, depth : int, _type):
         self._from = _from
         self._to = _to
-        self.token - token
+        self.token = token
         self.amount = amount
         self.depth = depth
         self.type = _type
 
-@dataclasss
+@dataclass
 class TxEvent():
     """
         Represents a logged event from the EVM. 
     """
-    def __init__(self, address : str, topics : [str], data :str):
+    def __init__(self, address : str, topics : List [str], data :str):
         self.address = address
         self.topics = topics
         self.data = data
 
         self.type = self.__load_type()
-
-    def __load_type(self):
-        if 
-
-    def get_type(self):
-
-
 
 
 class Call():
@@ -50,7 +45,9 @@ class Call():
         self._to = _to
         self.value = value
         self.gas = gas
-        self.input = self.__load_input(_input)
+
+        self.signature = ""
+        self.input : List[int] = self.__load_input(_input)
         self.output = output
         self.type = calltype
         self.depth = depth
@@ -58,12 +55,11 @@ class Call():
         self.contract = None
 
     def __load_input(self, _input):
-        res = []
+        res = []    
 
-        res.append(_input[0:10])
+        self.signature = _input[2:10]
 
-        [res.append(_input[i:i+64]) for i in range(10, len(_input), 64)]
-
+        [res.append(int(_input[i:i+64].lstrip('0'), 16)) for i in range(10, len(_input), 64)]
         return res
 
     def set_contract(self, contract: Contract) -> None:
@@ -93,12 +89,14 @@ class Transaction():
         self.block: int = 0
         self.store = store
 
-        self.function_signatures: dict[str, [str]] = {}
+        self.function_signatures: Dict[str, List [str]] = {}
 
-        self.contracts: [Contract] = []
-        self.transfers : [Transfer] = []
-        self.events : [TxEvent] = []
-        self.calls: [Call] = []
+        self.contracts: Dict [str, Contract] = {}
+        self.transfers : List [Transfer] = []
+        self.events : List [TxEvent] = []
+        self.calls: List [Call] = []
+
+        self.is_token_transfer = False
 
         self.__load_tx(fetcher)
 
@@ -124,8 +122,8 @@ class Transaction():
         self.gas_used = int(data['gasused'])
         self.block = int(data['block'])
 
-        self.__load_transfer_logs(data['transferLogs'])
         self.__load_verified_functions(data['functrace'])
+        self.__load_transfer_logs(data['transferlogs'])
         self.__load_signatures()
 
     def __load_verified_functions(self, functrace: str) -> None:
@@ -149,8 +147,8 @@ class Transaction():
         for address in addresses:
             contract = self.store.get_contract(address)
 
-            if contract != None:
-                self.contracts.append(contract)
+            if contract is not None:
+                self.contracts[contract.address] = contract
 
     def __str__(self) -> str:
         return (f"({self.block}) Transaction {self.hash}: {self._from}->{self._to}\n"
@@ -165,23 +163,28 @@ class Transaction():
             Loads all interacted with function signatures:
         """
 
-        for contract in self.contracts:
+        for contract in self.contracts.values():
             self.function_signatures.update(contract.get_func_signatures())
 
-    def __load_events(self, logs : [str, str]) -> None:
+    def __load_events(self, logs : List [str]) -> None:
         for event in logs:
             addr, topics_str, data, _ = event.split(',')
             topics = ast.literal_eval(topics_str)
             self.events.append(TxEvent(addr, topics, data))
 
 
-    def __load_transfer_logs(self, logs : [str,str]) -> None:
+    def __load_transfer_logs(self, logs : List [str]) -> None:
         for transfer in logs.split("\n"):
-            _from, _to, token_addr, amount, depth, _  = transfer.split(",")
-            self.transfers.append(Transfer(_from, _to, token_addr, amount, depth))
+            _from, _to, token_addr, amount, depth, *_  = transfer.split(",")
+            
+            if token_addr in self.contracts:
+                _type = self.contracts[token_addr].get_type()
+                self.is_token_transfer = True
+            else:
+                _type = ''
+            self.transfers.append(Transfer(_from, _to, token_addr, amount, depth, _type))
 
-
-    def interacted_functions(self) -> [str]:
+    def interacted_functions(self) -> List [str]:
         """
             Returns all functions that the transaction interacts with out of
             all the verified contracts the transaction interacts with. Must be
@@ -204,7 +207,7 @@ class Transaction():
 
         if sig != None:
             for call in self.calls:
-                if call._to == address and call.input[0][2:10] == sig:
+                if call._to == address and call.signature == sig:
                     return True
 
         return False
@@ -221,3 +224,24 @@ class Transaction():
                     return True
 
         return False
+
+    def get_function_value(self, location : int) -> int:
+        '''
+            Returns a parameter in the original function call that
+            launched the transaction specified by location. Since
+            the first arg is the function that is invoked, we add
+            one to location (so location = 0 gets the first parameter)
+        '''
+
+        return self.calls[0].input[location]
+
+    def get_token_transfer(self) -> tuple:
+        '''
+            For now, we just get the first token transfer that is erc20/721
+        '''
+
+        for tx in self.transfers or []:
+            if tx.type in {'ERC721', 'ERC20'}:
+                return (tx._from, tx._to, tx.token, tx.amount)
+        
+        return ()

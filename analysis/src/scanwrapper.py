@@ -9,6 +9,7 @@ from errors import ContractNotFound, InvalidRequest, BlockNotFound
 from contract import Contract
 import pprint
 import json
+from typing import List
 
 
 class BaseContractScanner():
@@ -62,7 +63,7 @@ class BaseContractScanner():
         except ContractNotFound:
             return None
 
-    def get_contracts(self, addresses: [str]) -> dict[str, str]:
+    def get_contracts(self, addresses: List [str]) -> dict[str, str]:
         """
             Returns a dictionary consisting of the mapping between all provided addresses and a
             Contract object of the address if verified. If the contract does not have a verified source
@@ -130,11 +131,11 @@ class BaseContractScanner():
 
             json = req.json()
             if (('status' in json and json['status'] == '0')
-                    or ('status' in json and json['status'] == '1' and json['timeStamp'] == "")):
+                    or ('status' in json and json['status'] == '1' and json['result']['timeStamp'] == "")):
                 raise ContractNotFound(
                     "The specified contract was not found for this endpoint")
 
-            return int(json['timeStamp'])
+            return int(json['result']['timeStamp'])
         except BlockNotFound:
             return None
 
@@ -159,7 +160,6 @@ class BaseContractScanner():
             return int(json['result'])
         except BlockNotFound():
             return None
-
 
 class BSCContractScanner(BaseContractScanner):
     """

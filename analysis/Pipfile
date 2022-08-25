@@ -20,4 +20,4 @@ python_version = "3.10"
 
 [scripts]
 lint-fix = "autopep8 . --recursive --in-place --pep8-passes 2000 --verbose"
-dev = "python ./v2/main.py --chains eth bsc"
+dev = "python ./src/main.py --chains eth bsc -bs 15407299 -be 15407400"

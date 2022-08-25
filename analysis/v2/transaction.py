@@ -99,6 +99,8 @@ class Transaction():
             function signature at the passed address
         """
 
+        return
+
     def contains_function_value(self, address : str, sig : str, location : str, value : str) -> bool:
         """
             Returns whether the current transaction interacts with a specified 

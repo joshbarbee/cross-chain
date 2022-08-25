@@ -164,7 +164,7 @@ class Bridge():
     def load_transactions(self, start_block, end_block, amount = 100) -> None:
         for i in self.bridges or []:
             i.load_inbounds_transactions(start_block, end_block, amount)
-            i.load_outbound_transactions(start_block, end_block, amount)
+
 
     def __str__(self) -> str:
         return f"{self.name} at {self.address} \n Inputs: \n {self.inbound_funcs} \n Outputs: \n {self.outbound_funcs}"

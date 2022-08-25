@@ -18,7 +18,8 @@ parser = argparse.ArgumentParser(description=("Contract parser for XScan apis (e
                                               "\nUsage:\n-python contractscanner.py -tx {TX_HASH}"
                                               "\n-python contractscanner.py --chains bsc -tx {TX_HASH}"
                                               "\n-python contractscanner.py  --chains bsc -bk YOUR_BSCSCAN_API_KEY -tx {TX_HASH}"), formatter_class=RawTextHelpFormatter)
-parser.add_argument('-tx', '--transaction', type=str)
+parser.add_argument('-bs', '--blockStart', type=int)
+parser.add_argument('-be', '--blockEnd', type=int)
 parser.add_argument('-bk', '--bscKey', type=str,
                     help="API Key to use for BSC Scan.")
 parser.add_argument('-ek', '--ethKey', type=str,
@@ -54,6 +55,10 @@ if "poly" in args.chains:
 bridges = Bridges(ethStore, bscStore, polygonStore,
                   "./src/bridges2.json", bscFetcher, ethFetcher, polygonFetcher)
 
-bridges.bridges[0].load_transactions(0, 10000000, 100)
+bridges.bridges[0].load_transactions(args.blockStart, args.blockEnd, 100)
+
+bridges.bridges[0].link_transactions()
+
+print(bridges.bridges[0].linked_tx)
 
 

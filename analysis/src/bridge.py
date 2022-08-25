@@ -3,11 +3,13 @@ from contractstore import ContractStore
 from mgowrapper import MongoFetcher
 from transaction import Transaction
 import json
-from enum import Enum
+from enum import IntEnum
 from collections import defaultdict
 import pandas as pd
 
-class Chains(Enum):
+from typing import List, Dict
+
+class Chains(IntEnum):
     ETH = 1
     POLYGON = 137
     FANTOM = 250
@@ -24,32 +26,52 @@ class Chains(Enum):
         else:
             return None
 
-class CelerCrossChainTx():
-    def __init__(self, _from: str, _to: str, srcChain : Chains, destChain : Chains, tokenAddr : str, tokenAmount : str):
-
+    @classmethod
+    def to_str(cls, name) -> str:
+        if name == Chains.ETH:
+            return "eth"
+        elif name == Chains.POLYGON:
+            return "polygon"
+        elif name == Chains.BSC:
+            return "bsc"
+ 
 class Endpoint():
     ''' 
         An endpoint is a single bridge instance, correspoding to the bridge type. 
         So a bridge that supports eth, polygon, and bsc will have 3 endpoints, \
         one for each chain
     '''
-    def __init__(self, type : Chains, address : str, db : MongoFetcher, store: ContractStore, inbound_functions, outbound_functions, inbound_events, outbound_events) -> None: 
+    def __init__(self, chain : Chains, address : str, db : MongoFetcher, store: ContractStore, inbound_functions, outbound_functions, inbound_events, outbound_events) -> None: 
         self.address = address
         self.store = store
         self.contract = store.get_contract(address)
         self.db = db
 
-        self.inbound_funcs = []
+        self.chain = chain
+
+        self.inbound_funcs : List[Function] = []
         self.outbound_funcs = []
         self.inbound_events = []
         self.outbound_events = []
 
-        self.outbound_tx = pd.DataFrame()
-        self.inbound_tx = p
+        self.outbound_tx = []
+        self.inbound_tx = []
+
+        self.invalid_tx = []
 
         self.__load(inbound_functions, outbound_functions, inbound_events, outbound_events)
+    
+    def __hash__(self) -> int:
+        return hash(self.address)
 
-    def __load(self, inbound_funcs: [str, str], outbound_funcs: [str, str], inbound_events: [str, str], outbound_events: [str, str]) -> None:
+    def __eq__(self, __o: object) -> bool:
+        if isinstance(__o):
+            if __o == self:
+                return True
+        
+        return False
+
+    def __load(self, inbound_funcs: Dict [str, str], outbound_funcs: Dict [str, str], inbound_events: Dict [str, str], outbound_events: Dict [str, str]) -> None:
         """
             Loads in the input / output functions from the JSON file, then finds the 
             corresponding Function item already present in self.contract
@@ -68,7 +90,7 @@ class Endpoint():
             self.outbound_events.append(self.contract.get_event(next(iter(e))))
 
 
-    def load_inbounds_transactions(self, start_block: int, end_block : int, amount: int = 100) -> str:
+    def load_inbound_transactions(self, start_block: int, end_block : int, amount: int = 100) -> str:
         """
             Loads all transactions that invoke the output signature within a specified
             range of blocks. In this step, the only checked parameters are that the Relay
@@ -79,10 +101,9 @@ class Endpoint():
 
         for tx_hash in txs:
             tx = Transaction(tx_hash['tx'], self.db, self.store)
-
             for func in self.inbound_funcs:
-                if tx.contains_function(self.address, func.signature):
-                    self.inbound_funcs.append(tx)
+                if tx.contains_function(self.address, func.signature) and tx.is_token_transfer:
+                    self.inbound_tx.append(tx)
 
 
     def load_outbound_transactions(self, start_block: int, end_block: int, amount: int = 100) -> None:
@@ -96,9 +117,9 @@ class Endpoint():
 
         for tx_hash in txs:
             tx = Transaction(tx_hash['tx'], self.db, self.store)
-
+           
             for func in self.outbound_funcs:
-                if tx.contains_function(self.address, func.signature):
+                if tx.contains_function(self.address, func.signature) and tx.is_token_transfer:
                     self.outbound_tx.append(tx)
 
     def get_inbound_transactions(self) -> list:
@@ -107,6 +128,64 @@ class Endpoint():
     def get_outbound_transactions(self) -> list:
         return self.outbound_tx
 
+    def get_src_token_transfers(self) -> pd.DataFrame:
+        temp = {}
+
+        for tx in self.inbound_tx:
+            data = tx.get_token_transfer()
+
+            if len(data) < 4:
+                continue
+
+            _from, _to, token_addr, amount = data
+
+            temp[tx.hash] = [tx.hash, _from, _to, token_addr, int(self.chain), int(amount,16)]
+
+        return pd.DataFrame.from_dict(temp, orient='index', columns=['srcHash', 'srcSender','srcReceiver','srcTokenAddr','chainId', 'srcValue'])
+
+    def get_dest_token_transfers(self) -> pd.DataFrame:
+        temp = {}
+
+        for tx in self.outbound_tx:
+            data = tx.get_token_transfer()
+
+            if len(data) < 4:
+                continue
+
+            _from, _to, token_addr, amount = data
+
+            chain_id = tx.get_function_value(3)
+
+            src_receiver = hex(tx.get_function_value(0))
+
+            temp[tx.hash] = [tx.hash, _from, _to, token_addr, chain_id, int(amount,16), src_receiver]
+            
+        return pd.DataFrame.from_dict(temp, orient='index', columns=['destHash', 'destSender','destReceiver','destTokenAddr','chainId', 'destValue', 'srcReceiver'])
+
+
+    def verify_src_token_transfer(self):
+        temp = []
+
+        for tx in self.outbound_tx:
+            if tx.contains_token_transfer(tx._from, self.address, tx.cross_chain_token):
+                temp.append(tx)
+            else:
+                self.invalid_tx.append(tx)
+        
+        self.outbound_tx = temp
+    
+    def verify_dest_token_transfer(self):
+        temp = []
+
+        for tx in self.inbound_tx:
+            if tx.contains_token_transfer(tx.cross_chain_receiver, self.address, tx.cross_chain_token):
+                temp.append(tx)
+            else:
+                self.invalid_tx.append(tx)
+        
+        self.inbound_tx = temp
+
+
 class Bridge():
     '''
         Defines a single Bridge object, which represents a cross chain
@@ -114,20 +193,24 @@ class Bridge():
         implementation
     '''
 
-    def __init__(self, name: str, data : [str,str], stores: [str, ContractStore], dbs: [str, MongoFetcher]) -> None:
+    def __init__(self, name: str, data : Dict [str,str], stores: Dict [str, ContractStore], dbs: Dict [str, MongoFetcher]) -> None:
         self.name = name
         self.stores = stores
         self.dbs = dbs
 
-        self.bridges : [Endpoint] = []
+        self.bridges : Dict [str, Endpoint] = self.__load_bridges(data)
 
-        self.linked_tx : [(Transaction, Transaction)] = []
+        self.linked_tx : pd.DataFrame = pd.DataFrame(columns=[
+                        'srcHash', 'srcSender','srcReceiver','srcTokenAddr','srcChainId', 'srcValue', 'destHash', 'destSender', 'destReceiver', 'destTokenAddr', 'destChainId', 'destValue'])
 
-        self.__load_bridges(data)
+        self.invalid_tx : pd.DataFrame = pd.DataFrame(columns=['tx', 'srcChainId', 'reason'])
 
-    def __load_bridges(self, data : [str,str]) -> None:
-        for k,v in data.items():
-            chain = Chains.resolve_name(k)
+    def __load_bridges(self, data : Dict [str,str]) -> None:
+        res = {}
+
+        for c in data:
+            v = data[c]
+            chain = Chains.resolve_name(c)
 
             inbound_funcs = v['inboundFunctions']
             inbound_events = v['inboundEvents']
@@ -136,15 +219,45 @@ class Bridge():
 
             address = v['address']
 
-            endpoint = Endpoint(chain, address, self.dbs[k], self.stores[k], inbound_funcs, outbound_funcs, inbound_events, outbound_events)
-            self.bridges.append(endpoint)
+            endpoint = Endpoint(chain, address, self.dbs[c], self.stores[c], inbound_funcs, outbound_funcs, inbound_events, outbound_events)
+            
+            res[chain] = endpoint
+
+        return res
 
     def load_transactions(self, start_block, end_block, amount = 100) -> None:
-        for i in self.bridges or []:
-            i.load_inbounds_transactions(start_block, end_block, amount)
-            i.load_outbound_transactions(start_block, end_block, amount)
-    
+        self.bridges[Chains.ETH].load_outbound_transactions(start_block, end_block, amount)
+        relative_block = self.get_relative_chain_block(start_block, Chains.ETH, Chains.BSC)
+
+        self.bridges[Chains.BSC].load_inbound_transactions(relative_block, relative_block + 100, amount)
+
+    def link_transactions(self) -> None:
+        self.link_token_transfers()
+
+        self.find_invalid_transfer_amt()
+
+    def link_token_transfers(self) -> None:
+        dest_txs = pd.DataFrame(columns=['destSender','destReceiver','destTokenAddr','chainId', 'destValue', 'srcReceiver'])
+        src_txs = pd.DataFrame(columns=['srcSender','srcReceiver','srcTokenAddr','chainId', 'srcValue'])
+
+        for i in self.bridges.values():
+            src_txs = pd.concat([src_txs, i.get_src_token_transfers()], ignore_index=True)
+
+            dest_txs = pd.concat([dest_txs, i.get_dest_token_transfers()], ignore_index=True)
+
+        self.linked_tx = dest_txs.merge(src_txs, on=['srcReceiver','chainId'], how='outer')
+
+    def find_invalid_transfer_amt(self) -> None:
+        self.linked_tx = self.linked_tx[self.linked_tx['destValue'] <= self.linked_tx['srcValue']]
         
+    def get_relative_chain_block(self, block : int, src_chain: Chains, dest_chain : Chains) -> int: 
+        if src_chain not in self.bridges or dest_chain not in self.bridges:
+            raise ValueError
+
+        timestamp = self.stores[Chains.to_str(src_chain)].get_block_timestamp(block)
+
+        return self.stores[Chains.to_str(dest_chain)].get_closest_block(timestamp)
+            
     def __str__(self) -> str:
         return f"{self.name} at {self.address} \n Inputs: \n {self.inbound_funcs} \n Outputs: \n {self.outbound_funcs}"
 
@@ -163,7 +276,7 @@ class Bridges():
         self.polygon_store = polygon_store
         self.polygon_fetcher = polygon_fetcher
 
-        self.bridges: [Bridge] = []
+        self.bridges: List [Bridge] = []
 
         self.__load_bridges(filename)
 
@@ -176,5 +289,5 @@ class Bridges():
         with open(filename, 'r') as f:
             data = json.load(f)
 
-            for bridge in data.get("Celer") or []:
-                self.bridges.append(Bridge("Celer", bridge, stores, dbs))
+            for bridge in data:
+                self.bridges.append(Bridge(bridge, data[bridge], stores, dbs))
