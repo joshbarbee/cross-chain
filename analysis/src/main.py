@@ -18,12 +18,16 @@ parser = argparse.ArgumentParser(description=("Contract parser for XScan apis (e
                                               "\nUsage:\n-python contractscanner.py -tx {TX_HASH}"
                                               "\n-python contractscanner.py --chains bsc -tx {TX_HASH}"
                                               "\n-python contractscanner.py  --chains bsc -bk YOUR_BSCSCAN_API_KEY -tx {TX_HASH}"), formatter_class=RawTextHelpFormatter)
-parser.add_argument('-bs', '--blockStart', type=int)
-parser.add_argument('-be', '--blockEnd', type=int)
+parser.add_argument('-tx', '--transaction', type=str,
+                    help="the transaction to scan for")
 parser.add_argument('-bk', '--bscKey', type=str,
                     help="API Key to use for BSC Scan.")
 parser.add_argument('-ek', '--ethKey', type=str,
                     help="API Key to use for Eth Scan")
+parser.add_argument('-ep', '--polyKey', type=str,
+                    help="API Key to use for Eth Scan")
+parser.add_argument('-db', '--database', type=str,
+                    help="The database to use for mongodb scanning", required=True)
 parser.add_argument('-c', "--chains", nargs='+',
                     help="Chains sto run analysis on \n Supported options:\n-eth\n-bsc\n", required=True)
 
@@ -33,9 +37,9 @@ bscStore = None
 ethStore = None
 polygonStore = None
 
-bscFetcher = MongoFetcher("ethereum", "bsc")
-ethFetcher = MongoFetcher("ethereum", "eth")
-polygonFetcher = MongoFetcher("ethereum", "poly")
+bscFetcher = MongoFetcher(args.database, "bsc")
+ethFetcher = MongoFetcher(args.database, "eth")
+polygonFetcher = MongoFetcher(args.database, "poly")
 
 if "bsc" in args.chains:
     bscApiKey = bscApiKey = os.getenv(
@@ -49,16 +53,14 @@ if "eth" in args.chains:
 
 if "poly" in args.chains:
     polyApiKey = polyApiKey = os.getenv(
-        "polyApiKey") if args.poliKey == None else args.poliKey
+        "polyApiKey") if args.polyKey == None else args.polyKey
     polygonStore = ContractStore(PolyContractScanner(polyApiKey))
 
 bridges = Bridges(ethStore, bscStore, polygonStore,
-                  "./src/bridges2.json", bscFetcher, ethFetcher, polygonFetcher)
+                  "./src/bridges2.json", bscFetcher, ethFetcher, polygonFetcher, args.chains)
 
-bridges.bridges[0].load_transactions(args.blockStart, args.blockEnd, 100)
+bridges.load_transaction(args.transaction)
 
-bridges.bridges[0].link_transactions()
+bridges.link_transaction()
 
 print(bridges.bridges[0].linked_tx)
-
-

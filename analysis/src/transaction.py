@@ -7,12 +7,14 @@ import ast
 
 from typing import List, Dict
 
+
 @dataclass
 class Transfer():
     """
         A single transfer event, corresponding to the transferLogs index in the database
     """
-    def __init__(self, _from : str, _to : str, token : str, amount : int, depth : int, _type):
+
+    def __init__(self, _from: str, _to: str, token: str, amount: int, depth: int, _type):
         self._from = _from
         self._to = _to
         self.token = token
@@ -20,12 +22,14 @@ class Transfer():
         self.depth = depth
         self.type = _type
 
+
 @dataclass
 class TxEvent():
     """
         Represents a logged event from the EVM. 
     """
-    def __init__(self, address : str, topics : List [str], data :str):
+
+    def __init__(self, address: str, topics: List[str], data: str):
         self.address = address
         self.topics = topics
         self.data = data
@@ -47,7 +51,7 @@ class Call():
         self.gas = gas
 
         self.signature = ""
-        self.input : List[int] = self.__load_input(_input)
+        self.input: List[int] = self.__load_input(_input)
         self.output = output
         self.type = calltype
         self.depth = depth
@@ -55,11 +59,12 @@ class Call():
         self.contract = None
 
     def __load_input(self, _input):
-        res = []    
+        res = []
 
         self.signature = _input[2:10]
 
-        [res.append(int(_input[i:i+64].lstrip('0'), 16)) for i in range(10, len(_input), 64)]
+        [res.append(int(_input[i:i+64].lstrip('0'), 16))
+         for i in range(10, len(_input), 64)]
         return res
 
     def set_contract(self, contract: Contract) -> None:
@@ -89,12 +94,12 @@ class Transaction():
         self.block: int = 0
         self.store = store
 
-        self.function_signatures: Dict[str, List [str]] = {}
+        self.function_signatures: Dict[str, List[str]] = {}
 
-        self.contracts: Dict [str, Contract] = {}
-        self.transfers : List [Transfer] = []
-        self.events : List [TxEvent] = []
-        self.calls: List [Call] = []
+        self.contracts: Dict[str, Contract] = {}
+        self.transfers: List[Transfer] = []
+        self.events: List[TxEvent] = []
+        self.calls: List[Call] = []
 
         self.is_token_transfer = False
 
@@ -166,25 +171,25 @@ class Transaction():
         for contract in self.contracts.values():
             self.function_signatures.update(contract.get_func_signatures())
 
-    def __load_events(self, logs : List [str]) -> None:
+    def __load_events(self, logs: List[str]) -> None:
         for event in logs:
             addr, topics_str, data, _ = event.split(',')
             topics = ast.literal_eval(topics_str)
             self.events.append(TxEvent(addr, topics, data))
 
-
-    def __load_transfer_logs(self, logs : List [str]) -> None:
+    def __load_transfer_logs(self, logs: List[str]) -> None:
         for transfer in logs.split("\n"):
-            _from, _to, token_addr, amount, depth, *_  = transfer.split(",")
-            
+            _from, _to, token_addr, amount, depth, *_ = transfer.split(",")
+
             if token_addr in self.contracts:
                 _type = self.contracts[token_addr].get_type()
                 self.is_token_transfer = True
             else:
                 _type = ''
-            self.transfers.append(Transfer(_from, _to, token_addr, amount, depth, _type))
+            self.transfers.append(
+                Transfer(_from, _to, token_addr, amount, depth, _type))
 
-    def interacted_functions(self) -> List [str]:
+    def interacted_functions(self) -> List[str]:
         """
             Returns all functions that the transaction interacts with out of
             all the verified contracts the transaction interacts with. Must be
@@ -225,7 +230,7 @@ class Transaction():
 
         return False
 
-    def get_function_value(self, location : int) -> int:
+    def get_function_value(self, location: int) -> int:
         '''
             Returns a parameter in the original function call that
             launched the transaction specified by location. Since
@@ -243,5 +248,5 @@ class Transaction():
         for tx in self.transfers or []:
             if tx.type in {'ERC721', 'ERC20'}:
                 return (tx._from, tx._to, tx.token, tx.amount)
-        
+
         return ()

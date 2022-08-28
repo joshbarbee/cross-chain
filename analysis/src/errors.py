@@ -31,6 +31,7 @@ class FunctionNotFound(BaseException):
         contract source code
     """
 
+
 class EventNotFound(BaseException):
     """
         Risen when a contract does not contain the specified event

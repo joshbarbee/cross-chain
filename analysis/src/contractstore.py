@@ -15,7 +15,7 @@ class ContractStore():
         self.contracts: dict[str, Contract] = {}
         self.scanner = scanner
 
-    def get_contract(self, address : str) -> Contract:
+    def get_contract(self, address: str) -> Contract:
         """
             Checks to see if the contract first exists locally, then checks the *Scan APIs to see if the contract can be loaded.
             If the contract is not loaded, none is returned
@@ -41,3 +41,5 @@ class ContractStore():
     def get_closest_block(self, timestamp: int) -> int:
         return self.scanner.get_closest_block(timestamp)
 
+    def get_tx_exists(self, tx: str) -> bool:
+        return self.scanner.get_tx_exists(tx)

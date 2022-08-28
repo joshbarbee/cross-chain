@@ -63,7 +63,7 @@ class BaseContractScanner():
         except ContractNotFound:
             return None
 
-    def get_contracts(self, addresses: List [str]) -> dict[str, str]:
+    def get_contracts(self, addresses: List[str]) -> dict[str, str]:
         """
             Returns a dictionary consisting of the mapping between all provided addresses and a
             Contract object of the address if verified. If the contract does not have a verified source
@@ -158,8 +158,33 @@ class BaseContractScanner():
                     "The block was not valid for this endpoint")
 
             return int(json['result'])
-        except BlockNotFound():
+        except BlockNotFound:
             return None
+
+    def get_tx_exists(self, tx: str) -> bool:
+        """
+            Determines whether a transaction exists on the chain
+        """
+
+        try:
+            req = requests.get(
+                f"{self.base_url}?module=transaction&action=getstatus&txhash={tx}&apiKey={self.api_key}")
+
+            if req.status_code != 200:
+                raise InvalidRequest(
+                    "The passed paremeters were not valid for this endpoint")
+
+            json = req.json()
+
+            if (('status' in json and json['status'] == '0')
+                    or (json['message'] != 'OK')):
+                raise BlockNotFound(
+                    "The block was not valid for this endpoint")
+
+            return json['result']['isError'] == '0'
+        except BlockNotFound:
+            return None
+
 
 class BSCContractScanner(BaseContractScanner):
     """

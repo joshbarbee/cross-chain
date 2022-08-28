@@ -20,4 +20,4 @@ python_version = "3.10"
 
 [scripts]
 lint-fix = "autopep8 . --recursive --in-place --pep8-passes 2000 --verbose"
-dev = "python ./src/main.py --chains eth bsc -bs 15407299 -be 15407400"
+dev = "python ./src/main.py --database ethereum --chains eth bsc -tx 0x63ee6d44a3c25ab244d4d47a2de212544a017e79d1a829a294d69f71134a7474"

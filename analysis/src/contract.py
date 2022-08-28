@@ -38,6 +38,7 @@ erc721_events = [
     "17307eab39ab6107e8899845ad3d59bd9653f200f220920489ca2b5937696c31"
 ]
 
+
 class Event():
     """
         Class to contain information about a specific event
@@ -271,7 +272,7 @@ class Contract():
 
         raise FunctionNotFound
 
-    def get_event(self, name : str) -> Event:
+    def get_event(self, name: str) -> Event:
         for e in self.events:
             if e.name == name:
                 return e
@@ -301,6 +302,3 @@ class Contract():
 
     def get_type(self) -> str:
         return "ERC20" if self.is_erc_20 else "ERC721" if self.is_erc_721 else ""
-
-        
-
