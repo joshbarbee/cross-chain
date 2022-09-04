@@ -29,12 +29,15 @@ class TxEvent():
         Represents a logged event from the EVM. 
     """
 
-    def __init__(self, address: str, topics: List[str], data: str):
+    def __init__(self, src_contract : Contract, address: str, topics: List[str], data: str):
         self.address = address
         self.topics = topics
         self.data = data
+        self.contract = src_contract
 
-        self.type = self.__load_type()
+
+    def __load_data(self, data):
+        # first, get the args of the event that invoked the 
 
 
 class Call():
@@ -130,6 +133,7 @@ class Transaction():
         self.__load_verified_functions(data['functrace'])
         self.__load_transfer_logs(data['transferlogs'])
         self.__load_signatures()
+        self.__load_events(data['eventtrace'])
 
     def __load_verified_functions(self, functrace: str) -> None:
         """
@@ -175,7 +179,9 @@ class Transaction():
         for event in logs:
             addr, topics_str, data, _ = event.split(',')
             topics = ast.literal_eval(topics_str)
-            self.events.append(TxEvent(addr, topics, data))
+
+            contract = next((x for x in self.contracts if x.address == addr), None)
+            self.events.append(TxEvent(contract, addr, topics, data,))
 
     def __load_transfer_logs(self, logs: List[str]) -> None:
         for transfer in logs.split("\n"):
@@ -188,6 +194,9 @@ class Transaction():
                 _type = ''
             self.transfers.append(
                 Transfer(_from, _to, token_addr, amount, depth, _type))
+
+    def __load_relay_transfers_logs(self) -> None:
+        for event in self.events:
 
     def interacted_functions(self) -> List[str]:
         """

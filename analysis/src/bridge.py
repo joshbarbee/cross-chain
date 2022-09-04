@@ -144,18 +144,18 @@ class Endpoint():
             temp[tx.hash] = [tx.hash, _from, _to,
                              token_addr, int(self.chain), int(amount, 16)]
 
-        return pd.DataFrame.from_dict(temp, orient='index', columns=['srcHash', 'srcSender', 'srcReceiver', 'srcTokenAddr', 'chainId', 'srcValue'])
+        return pd.DataFrame.from_dict(temp, orient='index', columns=['destHash', 'destSender', 'destReceiver', 'destTokenAddr', 'chainId', 'destValue'])
 
     def get_src_token_transfers(self) -> pd.DataFrame:
         temp = {}
 
         if self.src_tx is None:
-            return pd.DataFrame(columns=['destHash', 'destSender', 'destReceiver', 'destTokenAddr', 'chainId', 'destValue', 'srcReceiver'])
+            return pd.DataFrame(columns=['srcHash', 'srcSender', 'srcReceiver', 'srcTokenAddr', 'chainId', 'srcValue', 'destReceiver'])
 
         data = self.src_tx.get_token_transfer()
 
         if len(data) < 4:
-            return pd.DataFrame(columns=['destHash', 'destSender', 'destReceiver', 'destTokenAddr', 'chainId', 'destValue', 'srcReceiver'])
+            return pd.DataFrame(columns=['srcHash', 'srcSender', 'srcReceiver', 'srcTokenAddr', 'chainId', 'srcValue', 'destReceiver'])
 
         _from, _to, token_addr, amount = data
 
@@ -166,7 +166,7 @@ class Endpoint():
         temp[self.src_tx.hash] = [self.src_tx.hash, _from,
                                        _to, token_addr, chain_id, int(amount, 16), src_receiver]
 
-        return pd.DataFrame.from_dict(temp, orient='index', columns=['destHash', 'destSender', 'destReceiver', 'destTokenAddr', 'chainId', 'destValue', 'srcReceiver'])
+        return pd.DataFrame.from_dict(temp, orient='index', columns=['srcHash', 'srcSender', 'srcReceiver', 'srcTokenAddr', 'chainId', 'srcValue', 'destReceiver'])
 
     def verify_dest_token_transfer(self):
         temp = []
@@ -202,7 +202,7 @@ class Bridge():
         self.invalid_tx: pd.DataFrame = pd.DataFrame(
             columns=['tx', 'srcChainId', 'reason'])
 
-    def __load_bridges(self, data: Dict[str, str], chains : List[str]) -> None:
+    def __load_bridges(self, data: Dict[str, str], chains : List[Chains]) -> None:
         res = {}
 
         for c in data:
@@ -216,7 +216,7 @@ class Bridge():
 
             address = v['address']
 
-            if Chains.to_str(chain) in chains:
+            if chain in chains:
                 endpoint = Endpoint(chain, address, self.dbs[c], self.stores[c],
                                     dest_funcs, src_funcs, dest_events, src_events)
 
@@ -246,9 +246,9 @@ class Bridge():
 
     def link_token_transfers(self) -> None:
         dest_txs = pd.DataFrame(columns=[
-                                'destSender', 'destReceiver', 'destTokenAddr', 'chainId', 'destValue', 'srcReceiver'])
+                                'destSender', 'destReceiver', 'destTokenAddr', 'chainId', 'destValue'])
         src_txs = pd.DataFrame(
-            columns=['srcSender', 'srcReceiver', 'srcTokenAddr', 'chainId', 'srcValue'])
+            columns=['srcSender', 'srcReceiver', 'srcTokenAddr', 'chainId', 'srcValue', 'destReceiver'])
 
         for i in self.bridges.values():
             src_txs = pd.concat(
@@ -258,7 +258,7 @@ class Bridge():
                 [dest_txs, i.get_dest_token_transfers()], ignore_index=True)
 
         self.linked_tx = src_txs.merge(
-            dest_txs, on=['srcReceiver', 'chainId'], how='outer')
+            dest_txs, on=['destReceiver', 'chainId'], how='outer')
 
     def find_invalid_transfer_amt(self) -> None:
         self.linked_tx = self.linked_tx[self.linked_tx['destValue']
@@ -303,11 +303,13 @@ class Bridges():
         dbs = {"bsc": self.bsc_fetcher, "eth": self.eth_fetcher,
                "poly": self.polygon_fetcher}
 
+        formatted_chains = [Chains.resolve_name(chain) for chain in chains]
+
         with open(filename, 'r') as f:
             data = json.load(f)
 
             for bridge in data:
-                self.bridges.append(Bridge(bridge, data[bridge], stores, dbs, chains))
+                self.bridges.append(Bridge(bridge, data[bridge], stores, dbs, formatted_chains))
 
     def load_transaction(self, tx: str) -> None:
         for bridge in self.bridges:

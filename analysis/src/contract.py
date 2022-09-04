@@ -6,6 +6,7 @@
 import json
 from Crypto.Hash import keccak
 from errors import FunctionNotFound, EventNotFound
+import ethtypes
 
 erc20_sigs = [
     "dd62ed3e90e97b3d417db9c0c7522647811bafca5afc6694f143588d255fdfb4"
@@ -73,6 +74,9 @@ class Event():
         fstring = "\n\t"
         return f"\n{self.name} (0x{self.signature}): \n\t{fstring.join(inputs)}"
 
+    def get_args_types(self) -> str:
+        return [i['type'] for i in self.args]
+
     def __create_signature(self) -> str:
         """
             Creates the function signature of this
@@ -113,14 +117,14 @@ class Function():
 
         for i in self.inputs:
             inputs.append({
-                type: i['type'],
+                _type: i['type'],
                 name: i['name'],
                 internal_type: i['internalType'] if 'internalType' in i else i['type']
             })
 
         for i in self.outputs:
             outputs.append({
-                type: i['type'],
+                _type: i['type'],
                 name: i['name'],
                 internal_type: i['internalType'] if 'internalType' in i else i['type']
             })
@@ -278,6 +282,14 @@ class Contract():
                 return e
 
         raise EventNotFound
+
+    def get_event_arg_lengths(self, event_sig : str) -> List[int]:
+        lengths = []
+        for e in self.events:
+            if e.signature == event_sig:
+                lengths = [ethtypes.get_type_length(i['type']) for i in e.args]
+
+        return lengths
 
     def __determine_contract_type(self) -> None:
         erc_funcs = []

@@ -36,8 +36,10 @@ class MongoFetcher():
             Gets a single transaction based on the tx argument, which is the 
             hash of the transaction
         '''
+
         if tx == "":
             return list(self.collection.aggregate([{"$sample": {"size": 1}}]))[0]
+
         return self.collection.find_one({"tx": tx})
 
     def get_block_range(self, start: int, end: int, to_address: str = None, limit: int = 1000):

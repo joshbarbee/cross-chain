@@ -10,6 +10,7 @@ from mgowrapper import MongoFetcher
 from transaction import Transaction
 from contractstore import ContractStore
 from bridge import Bridges
+import pandas as pd
 
 parser = argparse.ArgumentParser(description=("Contract parser for XScan apis (etherscan, bscscan, etc)"
                                               "\n*If an API key is not provided, then the .env file will "
@@ -51,7 +52,7 @@ if "eth" in args.chains:
         "ethApiKey") if args.ethKey == None else args.ethKey
     ethStore = ContractStore(EthContractScanner(ethApiKey))
 
-if "poly" in args.chains:
+if "poly" in args.chains or "polygon" in args.chains:
     polyApiKey = polyApiKey = os.getenv(
         "polyApiKey") if args.polyKey == None else args.polyKey
     polygonStore = ContractStore(PolyContractScanner(polyApiKey))
@@ -64,3 +65,4 @@ bridges.load_transaction(args.transaction)
 bridges.link_transaction()
 
 print(bridges.bridges[0].linked_tx)
+bridges.bridges[0].linked_tx.to_csv(path_or_buf="./example.txt")
