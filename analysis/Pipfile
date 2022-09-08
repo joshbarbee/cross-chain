@@ -8,7 +8,6 @@ requests = "*"
 pycryptodome = "*"
 pymongo = "*"
 pandas = "*"
-web3py = "*
 
 [dev-packages]
 pycodestyle = "*"
@@ -20,4 +19,4 @@ pylint-quotes = "*"
 python_version = "3"
 [scripts]
 lint-fix = "autopep8 . --recursive --in-place --pep8-passes 2000 --verbose"
-dev = "python ./src/main.py --database ethereum --chains eth bsc -tx 0x63ee6d44a3c25ab244d4d47a2de212544a017e79d1a829a294d69f71134a7474"
+dev = "python ./src/main.py --database ethereum --chains eth bsc -tx 0x63ee6d44a3c25ab244d4d47a2de212544a017e79d1a829a294d69f71134a7474 --output ./output.csv"

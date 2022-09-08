@@ -170,9 +170,9 @@ func IsERC721(tokenAddr common.Address, topics []common.Hash, data []byte, depth
 }
 
 func WriteEntry(block big.Int, tx common.Hash, from string, to string, value big.Int, gasPrice big.Int, gasUsed uint64, extra string) {
-	eventTraceStr := strings.TrimSuffix(strings.ReplaceAll(Eventtrace.String(), "\x00", ""), "\n")
-	transferTraceStr := strings.TrimSuffix(strings.ReplaceAll(Transfertrace.String(), "\x00", ""), "\n")
-	funcTraceStr := strings.TrimSuffix(strings.ReplaceAll(Functrace.String(), "\x00", ""), "\n")
+	eventTraceStr := strings.TrimSuffix(string(bytes.Trim(Eventtrace.Bytes(), "\x00")), "\n")
+	transferTraceStr := strings.TrimSuffix(string(bytes.Trim(Transfertrace.Bytes(), "\x00")), "\n")
+	funcTraceStr := strings.TrimSuffix(string(bytes.Trim(Functrace.Bytes(), "\x00")), "\n")
 
 	trace := Collection{
 		Block:        int(block.Int64()),

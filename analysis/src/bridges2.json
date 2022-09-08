@@ -69,7 +69,29 @@
                         "srcTransferID"
                     ]
                 } 
-            ]
+            ],
+            "outboundFlow": {
+                "send": [
+                    {
+                        "function": "send",
+                        "emits": "Send"
+                    },
+                    {
+                        "function": "transferFrom",
+                        "emits": "Transfer"
+                    }
+                ],
+                "sendNative": [
+                    {
+                        "function": "sendNative",
+                        "emits": "Send"
+                    }, 
+                    {
+                        "function": "deposit",
+                        "emits": "Deposit"
+                    }
+                ]
+            }
         } ,
         "bsc": {
             "destChains": [

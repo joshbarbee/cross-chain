@@ -49,10 +49,11 @@ types = {
     "address": 64,
 }
 
-def get_type_length(_type : str) -> int:
+
+def get_type_length(_type: str) -> int:
     length = types.get(_type)
 
     if length is None:
         raise TypeNotFound
-    
+
     return length

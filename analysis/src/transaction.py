@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 from mgowrapper import MongoFetcher
 from errors import MongoTxNotFound
-from contract import Contract
+from contract import Contract, Event, Function
 from contractstore import ContractStore
 import ast
 
-from typing import List, Dict
+from typing import List, Dict, TUple
 
 
 @dataclass
@@ -29,15 +29,24 @@ class TxEvent():
         Represents a logged event from the EVM. 
     """
 
-    def __init__(self, src_contract : Contract, address: str, topics: List[str], data: str):
+    def __init__(self, src_contract: Contract, address: str, topics: List[str], data: str):
         self.address = address
         self.topics = topics
-        self.data = data
+        self.signature = topics[0]
         self.contract = src_contract
+        self.data = self.__load_data(data)
 
+    def __load_data(self, data: List[str]):
+        lengths = self.contract.get_event_arg_lengths(self.topics[0])
+        counter = 0
+        res = []
 
-    def __load_data(self, data):
-        # first, get the args of the event that invoked the 
+        for i in lengths:
+            res.append(int(self.data[counter: counter + i]), 16)
+
+            counter += hex(i - 2)  # -2 to offset 0x prefix
+
+        return res
 
 
 class Call():
@@ -45,8 +54,8 @@ class Call():
         A single call event. Either Call / CallCode / StaticCall / Create / DelegateCall
     """
 
-    def __init__(self, hash: str, index: int, depth: int, calltype: str, _from: str, _to: str, value: int, gas: int, _input: str, output: str) -> None:
-        self.hash = hash
+    def __init__(self, _hash: str, index: int, depth: int, calltype: str, _from: str, _to: str, value: int, gas: int, _input: str, output: str) -> None:
+        self.hash = _hash
         self.index = index
         self._from = _from
         self._to = _to
@@ -59,7 +68,12 @@ class Call():
         self.type = calltype
         self.depth = depth
 
+        self.event = None
+
         self.contract = None
+
+    def set_event(self, event: TxEvent):
+        self.event = event
 
     def __load_input(self, _input):
         res = []
@@ -133,7 +147,7 @@ class Transaction():
         self.__load_verified_functions(data['functrace'])
         self.__load_transfer_logs(data['transferlogs'])
         self.__load_signatures()
-        self.__load_events(data['eventtrace'])
+        self.__load_events(data['eventtrace'].split("\n"))
 
     def __load_verified_functions(self, functrace: str) -> None:
         """
@@ -177,11 +191,14 @@ class Transaction():
 
     def __load_events(self, logs: List[str]) -> None:
         for event in logs:
-            addr, topics_str, data, _ = event.split(',')
-            topics = ast.literal_eval(topics_str)
+            addr, topics_str, data, _type, func, index, = event.split(',')
+            topics = ast.literal_eval(topics_str.replace(" ", ","))
 
-            contract = next((x for x in self.contracts if x.address == addr), None)
-            self.events.append(TxEvent(contract, addr, topics, data,))
+            contract = self.contracts.get(addr)
+
+            if contract is not None:
+                self.calls[index].set_event(
+                    TxEvent(contract, addr, topics, data, _type))
 
     def __load_transfer_logs(self, logs: List[str]) -> None:
         for transfer in logs.split("\n"):
@@ -194,9 +211,6 @@ class Transaction():
                 _type = ''
             self.transfers.append(
                 Transfer(_from, _to, token_addr, amount, depth, _type))
-
-    def __load_relay_transfers_logs(self) -> None:
-        for event in self.events:
 
     def interacted_functions(self) -> List[str]:
         """
@@ -239,7 +253,7 @@ class Transaction():
 
         return False
 
-    def get_function_value(self, location: int) -> int:
+    def get_function_value(self, location: int, sig: str = None) -> int:
         '''
             Returns a parameter in the original function call that
             launched the transaction specified by location. Since
@@ -247,7 +261,28 @@ class Transaction():
             one to location (so location = 0 gets the first parameter)
         '''
 
-        return self.calls[0].input[location]
+        if sig is None:
+            return self.calls[0].input[location]
+
+        for call in self.calls:
+            if call.signature == sig:
+                return call.input[location]
+
+        return -1
+
+    def get_event_data_value(self, address: str, event_sig: str, location: int) -> int:
+        for event in self.events:
+            if event.address == address and event_sig == event.signature:
+                return event.data[location]
+
+        return -1
+
+    def get_event_data(self, address: str, event_sig: str) -> List[int]:
+        for event in self.events:
+            if event.address == address and event_sig == event.signature:
+                return event.data
+
+        return []
 
     def get_token_transfer(self) -> tuple:
         '''
@@ -259,3 +294,42 @@ class Transaction():
                 return (tx._from, tx._to, tx.token, tx.amount)
 
         return ()
+
+    def emits_illegal_events(self, address: str, sig: str) -> str:
+        for event in self.events:
+            if event.address != address and event.signature == sig:
+                return event.address
+
+
+class SrcEvents(Enum):
+    DSTCHAINID = "dstChainId"
+    NONCE = "nonce"
+    MAXSLIPPAGE = "maxSlippage"
+    RECEIVER = "receiver"
+    AMOUNT = "amount"
+    TOKEN = "token"
+
+
+class DestEvents(Enum):
+    SENDER = "sender"
+    RECEIVER = "receiver"
+    TOKEN = "token"
+    AMOUNT = "amount"
+    SRCCHAINID = "srcChainId"
+    SRCTRANSFERID = "srcTransferID"
+
+
+def CrossChainSend():
+    def __init__(self, tx: Transaction, send_func: Function, send_event: Event, bridge_addr: str):
+        self.tx = tx
+        self.func = send_func
+        self.event = send_event
+        self.address = bridge_addr
+
+    def get_transfer_by_event(self) -> Tuple[int]:
+        data = self.tx.get_event_data(self.address, self.event.signature)
+        params = self.event.get_param_names()
+
+        mapping = dict(zip(params, data))
+
+        return

@@ -120,6 +120,10 @@ class BaseContractScanner():
     def get_block_timestamp(self, block: int) -> int:
         """
             Returns the Unix timestamp for when a block was minted, or raises an error
+
+            @param block : the block number to get the timestamp of when it was created
+
+            @returns a unix timestamp of when a block was created
         """
         try:
             req = requests.get(
@@ -142,6 +146,10 @@ class BaseContractScanner():
     def get_closest_block(self, timestamp: int) -> int:
         """
             Returns the nearest block that was minted on the chain to the passed timestamp
+
+            @param timestamp : the Unix timetamp to search for the closest block minted after
+
+            @returns the block number of the most recent block after the timestamp
         """
         try:
             req = requests.get(

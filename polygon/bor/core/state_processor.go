@@ -102,7 +102,8 @@ func applyTransaction(msg types.Message, config *params.ChainConfig, bc ChainCon
 
 	// Apply the transaction to the current state (included in the env).
 	result, err := ApplyMessage(evm, msg, gp)
-	if err != nil {		return nil, err
+	if err != nil {
+		return nil, err
 	}
 
 	// Update the state with pending changes.
@@ -133,21 +134,17 @@ func applyTransaction(msg types.Message, config *params.ChainConfig, bc ChainCon
 		to = msg.To().String()
 	}
 
-	fmt.Println(*(receipt.BlockNumber))
-	fmt.Println(tx.Hash())
-	fmt.Println(msg.From().String())
-	fmt.Println(to)
-	fmt.Println()
-	if !evm.Prefetch {
-		mgologger.WriteEntry(*(receipt.BlockNumber), tx.Hash(), msg.From().String(), to, *msg.Value(), *msg.GasPrice(), result.UsedGas, "")
-	}
-
 	// Set the receipt logs and create the bloom filter.
 	receipt.Logs = statedb.GetLogs(tx.Hash(), blockHash)
 	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
 	receipt.BlockHash = blockHash
 	receipt.BlockNumber = blockNumber
 	receipt.TransactionIndex = uint(statedb.TxIndex())
+
+	if !evm.Prefetch {
+		mgologger.WriteEntry(*blockNumber, tx.Hash(), msg.From().String(), to, *msg.Value(), *msg.GasPrice(), result.UsedGas, "")
+	}
+
 	return receipt, err
 }
 

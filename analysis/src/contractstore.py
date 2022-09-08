@@ -36,10 +36,19 @@ class ContractStore():
         return contract
 
     def get_block_timestamp(self, block: int) -> int:
+        '''
+            Returns a timestamp of when a block was created, in Unix time 
+        '''
         return self.scanner.get_block_timestamp(block)
 
     def get_closest_block(self, timestamp: int) -> int:
+        '''
+            Returns the block that was created the closest to the passed timestamp 
+        '''
         return self.scanner.get_closest_block(timestamp)
 
     def get_tx_exists(self, tx: str) -> bool:
+        '''
+            Returns whether a Transaction exists within the specific ContractStore and Scanner 
+        '''
         return self.scanner.get_tx_exists(tx)

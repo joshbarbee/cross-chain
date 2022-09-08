@@ -5,7 +5,8 @@
 
 import json
 from Crypto.Hash import keccak
-from errors import FunctionNotFound, EventNotFound
+from errors import FunctionNotFound, EventNotFound, ParamNotFound
+from typing import List
 import ethtypes
 
 erc20_sigs = [
@@ -74,12 +75,16 @@ class Event():
         fstring = "\n\t"
         return f"\n{self.name} (0x{self.signature}): \n\t{fstring.join(inputs)}"
 
-    def get_args_types(self) -> str:
+    def get_args_types(self) -> List[str]:
+        ''' 
+            Returns the Solidity type of each Event parameter
+        '''
         return [i['type'] for i in self.args]
 
     def __create_signature(self) -> str:
         """
-            Creates the function signature of this
+            Creates the function signature of this via concatenating the name of the event
+            with the inputs, and then keccak256 hashing
         """
 
         input_types = ",".join([i['type'] for i in self.args])
@@ -89,6 +94,26 @@ class Event():
         self.k.update(string)
 
         return self.k.hexdigest()
+
+    def get_param_location(self, param: str) -> int:
+        ''' 
+            Returns the location of a parameter in the event, specified via
+            the parameter name
+
+            @param param : the name of the Event parameter to search for
+
+            @returns the location of where the specified parameter is within 
+            the Event
+        '''
+        count = 0
+
+        while self.inputs[count]["name"] != param:
+            count += 1
+
+            if count > len(self.inputs[count]):
+                raise ParamNotFound
+
+        return count
 
 
 class Function():
@@ -166,7 +191,8 @@ class Function():
 
     def __create_signature(self) -> str:
         """
-            Creates the function signature of this
+            Creates the function signature of this via keccak256.
+            Then, trims to first 4-bytes to match function signature rules
         """
 
         input_types = ",".join([i['type'] for i in self.inputs])
@@ -188,6 +214,29 @@ class Function():
 
     def __hash__(self) -> int:
         return hash(self.signature)
+
+    def get_param_location(self, param: str) -> int:
+        '''
+            Returns the location of a parameter for a function based on the
+            parameter name.
+
+            @param param : the name of the parameter to find the ordering of
+
+            @returns an int consisting of the location in which the parameter
+            name exists within the function 
+        '''
+        count = 0
+
+        while self.inputs[count]["name"] != param:
+            count += 1
+
+            if count > len(self.inputs[count]):
+                raise ParamNotFound
+
+        return count
+
+    def get_param_names(self) -> List[str]:
+        return [i['name'] for i in self.inputs]
 
 
 class Contract():
@@ -224,9 +273,12 @@ class Contract():
 
         return events
 
-    def __load_functions(self) -> [Function]:
+    def __load_functions(self) -> List[Function]:
         """
-            Returns all functions from the abi of the contract
+            Parses function information from the ABI, creating function 
+            objects for each function encountered
+
+            @returns a list consisting of each function the contract has
         """
 
         functions = []
@@ -270,6 +322,13 @@ class Contract():
         return {self.address: [i.signature for i in self.functions]}
 
     def get_function(self, name: str) -> Function:
+        '''
+            Gets a function object belonging to a contract based on the name of the function
+
+            @param name : the name of the function to search for 
+
+            @returns a function object that corresponds to that name 
+        '''
         for f in self.functions:
             if f.name == name:
                 return f
@@ -277,13 +336,28 @@ class Contract():
         raise FunctionNotFound
 
     def get_event(self, name: str) -> Event:
+        '''
+            Gets an event object belonging to the contract based on the name of the event
+
+            @param name : the name of the event to match with
+
+            @returns the Event object of the event that matches 
+        '''
         for e in self.events:
             if e.name == name:
                 return e
 
         raise EventNotFound
 
-    def get_event_arg_lengths(self, event_sig : str) -> List[int]:
+    def get_event_arg_lengths(self, event_sig: str) -> List[int]:
+        ''' 
+            Returns the length of each argument in bits for a certain event, 
+            specified via the event_sig parameter
+
+            @param event_sig : the signature of the event to get the argument
+            lengths for
+        '''
+
         lengths = []
         for e in self.events:
             if e.signature == event_sig:
@@ -291,7 +365,23 @@ class Contract():
 
         return lengths
 
+    def get_event_param_location(self, event_sig: str, name: str) -> int:
+        ''' 
+            TODO: NOT USED RIGHT NOW
+        '''
+        for e in self.events:
+            if e.name == event_sig:
+                return e.get_param_location(name)
+
+        raise ParamNotFound
+
     def __determine_contract_type(self) -> None:
+        '''
+            Determines the type of a contract based on the implemented events
+            and functions of the contract. We can determine if a contract is
+            ERC20/721 based on the events and functions, since we know the required
+            functions of an ERC20/721 contract 
+        '''
         erc_funcs = []
         erc_events = []
 

@@ -36,3 +36,15 @@ class EventNotFound(BaseException):
     """
         Risen when a contract does not contain the specified event
     """
+
+
+class TypeNotFound(BaseException):
+    """
+        Risen when a type is not found in the list of known types
+    """
+
+
+class ParamNotFound(BaseException):
+    """
+        Risen when a parameter is not found in a function or event
+    """

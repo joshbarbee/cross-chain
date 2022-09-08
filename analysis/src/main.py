@@ -29,6 +29,8 @@ parser.add_argument('-ep', '--polyKey', type=str,
                     help="API Key to use for Eth Scan")
 parser.add_argument('-db', '--database', type=str,
                     help="The database to use for mongodb scanning", required=True)
+parser.add_argument('-o', '--output', type=str,
+                    help="Filepath to output results to as a CSV, default stdout")
 parser.add_argument('-c', "--chains", nargs='+',
                     help="Chains sto run analysis on \n Supported options:\n-eth\n-bsc\n", required=True)
 
@@ -64,5 +66,4 @@ bridges.load_transaction(args.transaction)
 
 bridges.link_transaction()
 
-print(bridges.bridges[0].linked_tx)
-bridges.bridges[0].linked_tx.to_csv(path_or_buf="./example.txt")
+bridges.output_transaction(filename=args.output or "")
